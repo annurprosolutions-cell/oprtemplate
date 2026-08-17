@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<title>Sistem One Page Report</title>
+
+<!--
+  =====================================================================
+  SISTEM ONE PAGE REPORT (OPR) — FRONTEND  v2.0
+  =====================================================================
+  Tiada kata laluan, tiada kunci rahsia, dan tiada ID Google Sheet
+  dalam fail ini. Semua data dicapai melalui Apps Script Web App yang
+  di-gate session token. (Teknik Sekuriti #1, #2, #4)
+
+  Satu-satunya benda yang perlu diisi ialah SCRIPT_URL di bawah —
+  URL web app itu bukan rahsia, ia endpoint API awam yang dilindungi
+  oleh token di sebelah server.
+  =====================================================================
+-->
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+
+<style>
+:root{
+  --w1:#0f766e; --w2:#312e81; --aksen:#f59e0b;
+}
+body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
+.btn-utama{background:var(--w2);color:#fff;}
+.btn-utama:hover{filter:brightness(1.15);}
+.btn-aksen{background:var(--aksen);color:#fff;}
+.btn-aksen:hover{filter:brightness(1.08);}
+.grad-nav{background:linear-gradient(90deg,var(--w1),var(--w2));}
+.teks-w1{color:var(--w1);} .teks-w2{color:var(--w2);}
+
+/* --- Kertas A4 --- */
+.a4-page{
+  width:100%;max-width:210mm;min-height:290mm;max-height:290mm;
+  overflow:hidden;padding:12mm;box-sizing:border-box;background:#fffbeb;
+  margin:0 auto 16px;position:relative;box-shadow:0 10px 15px -3px rgba(0,0,0,.1);
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.a4-page.lampiran{justify-content:flex-start;gap:10px;}
+.a4-page > *{margin-bottom:3mm;}
+.kotak{background:#fff;border-radius:8px;padding:8px 12px;
+  box-shadow:0 4px 6px -1px rgba(0,0,0,.05);border:1px solid rgba(0,0,0,.05);
+  border-left:5px solid var(--w1);}
+.kotak.rose{border-left-color:#e11d48;} .kotak.indigo{border-left-color:#4f46e5;}
+.kotak.amber{border-left-color:#d97706;} .kotak.emerald{border-left-color:#059669;}
+.lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b;font-weight:700;margin-bottom:3px;}
+.val{color:#0f172a;font-weight:500;font-size:.92rem;line-height:1.4;white-space:pre-wrap;word-break:break-word;}
+
+/* --- Jadual --- */
+.tbl th{background:#f8fafc;color:#475569;padding:.7rem 1rem;text-transform:uppercase;
+  font-size:.7rem;text-align:left;border-bottom:2px solid #e2e8f0;font-weight:700;}
+.tbl td{padding:.7rem 1rem;border-bottom:1px solid #e2e8f0;font-size:.83rem;color:#334155;vertical-align:middle;}
+.tbl tr:hover{background:#f8fafc;}
+.scroll::-webkit-scrollbar{height:8px;width:8px;}
+.scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px;}
+
+/* --- Lain-lain --- */
+.tab-btn{padding:.6rem 1rem;border-radius:.6rem;font-size:.82rem;font-weight:700;color:#475569;}
+.tab-btn.aktif{background:var(--w2);color:#fff;}
+.inp{width:100%;border:1px solid #e2e8f0;background:#f8fafc;border-radius:.5rem;padding:.6rem;font-size:.87rem;}
+.inp:focus{outline:none;background:#fff;border-color:var(--w2);box-shadow:0 0 0 3px rgba(49,46,129,.12);}
+.kad{background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:1.5rem;}
+#overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.72);z-index:9999;
+  align-items:center;justify-content:center;flex-direction:column;}
+.animasi{animation:fadeIn .25s ease-out both;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.dd-kat{background:#f8fafc;color:#64748b;font-size:.68rem;font-weight:700;padding:6px 12px;
+  text-transform:uppercase;letter-spacing:.05em;border-top:1px solid #e2e8f0;}
+.dd-item{padding:7px 12px;cursor:pointer;font-size:.83rem;color:#334155;}
+.dd-item:hover{background:#eef2ff;color:#3730a3;}
+.pil{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:99px;}
+</style>
+</head>
+<body class="text-slate-800">
+
+<div id="overlay">
+  <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center min-w-[260px]">
+    <div class="animate-spin rounded-full h-11 w-11 border-b-2 border-slate-800 mb-4"></div>
+    <h2 id="overlayTeks" class="text-base font-bold text-slate-800">Sedang memproses...</h2>
+  </div>
+</div>
+
+<!-- ============ SKRIN 0: SETUP URL (kali pertama sahaja) ============ -->
+<div id="skrinSetup" class="hidden min-h-screen flex items-center justify-center p-4">
+  <div class="kad w-full max-w-lg">
+    <h1 class="text-xl font-bold mb-1">Pemasangan Sistem</h1>
+    <p class="text-sm text-slate-500 mb-5">Sistem ini belum disambungkan ke backend. Tampal URL Apps Script Web App anda di bawah.</p>
+    <label class="lbl">URL Web App (berakhir dengan /exec)</label>
+    <input id="setupUrl" class="inp mb-3" placeholder="https://script.google.com/macros/s/AKfy.../exec">
+    <button onclick="simpanSetupUrl()" class="btn-utama w-full py-2.5 rounded-lg font-bold text-sm">Sambung</button>
+    <p class="text-xs text-slate-400 mt-4 leading-relaxed">
+      Untuk kegunaan kekal, isi pemalar <code>SCRIPT_URL</code> di dalam fail
+      <code>index.html</code> supaya semua pengguna tidak perlu mengisi skrin ini.
+    </p>
+  </div>
+</div>
+
+<!-- ============ SKRIN 1: LOG MASUK ============ -->
+<div id="skrinLogin" class="hidden min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-6">
+      <div class="flex justify-center gap-3 mb-4">
+        <img id="loginLogo1" class="h-16 w-16 object-contain hidden bg-white rounded-full p-1 shadow" alt="Logo sekolah">
+        <img id="loginLogo2" class="h-16 w-16 object-contain hidden bg-white rounded-full p-1 shadow" alt="Logo tambahan">
+      </div>
+      <h1 id="loginNamaSistem" class="text-2xl font-bold teks-w2">Sistem One Page Report</h1>
+      <p id="loginNamaSekolah" class="text-sm text-slate-500 mt-1"></p>
+    </div>
+    <div class="kad">
+      <form id="formLogin" class="space-y-4" autocomplete="on">
+        <div>
+          <label class="lbl">Emel</label>
+          <input id="loginEmail" type="email" class="inp" autocomplete="username" required>
+        </div>
+        <div>
+          <label class="lbl">Kata Laluan</label>
+          <input id="loginPassword" type="password" class="inp" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn-utama w-full py-2.5 rounded-lg font-bold text-sm">
+          <i class="fas fa-right-to-bracket mr-2"></i>Log Masuk
+        </button>
+      </form>
+      <p class="text-xs text-slate-400 mt-4 text-center">Lupa kata laluan? Hubungi pentadbir sistem sekolah.</p>
+    </div>
+    <p id="loginConsent" class="text-[11px] text-slate-400 mt-5 leading-relaxed text-justify"></p>
+  </div>
+</div>
+
+<!-- ============ SKRIN 2: WAJIB TUKAR KATA LALUAN ============ -->
+<div id="skrinTukar" class="hidden min-h-screen flex items-center justify-center p-4">
+  <div class="kad w-full max-w-md">
+    <h1 class="text-lg font-bold mb-1">Tukar Kata Laluan</h1>
+    <p class="text-sm text-slate-500 mb-5">Anda menggunakan kata laluan sementara. Sila tetapkan kata laluan sendiri sebelum meneruskan.</p>
+    <form id="formTukar" class="space-y-3">
+      <div><label class="lbl">Kata laluan semasa</label><input id="pwLama" type="password" class="inp" required></div>
+      <div><label class="lbl">Kata laluan baharu</label><input id="pwBaru" type="password" class="inp" required minlength="10"></div>
+      <div><label class="lbl">Ulang kata laluan baharu</label><input id="pwBaru2" type="password" class="inp" required minlength="10"></div>
+      <p class="text-xs text-slate-400">Minimum 10 aksara, mesti ada huruf dan nombor.</p>
+      <button type="submit" class="btn-utama w-full py-2.5 rounded-lg font-bold text-sm">Simpan</button>
+      <button type="button" onclick="logKeluar()" class="w-full text-xs text-slate-400 underline">Log keluar</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ SKRIN 3: APLIKASI ============ -->
+<div id="app" class="hidden">
+  <nav class="grad-nav shadow-lg sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex items-center gap-2.5">
+          <img id="navLogo1" class="h-9 w-9 object-contain bg-white rounded-full p-0.5 hidden" alt="">
+          <img id="navLogo2" class="h-9 w-9 object-contain bg-white rounded-full p-0.5 hidden" alt="">
+          <div class="text-white leading-tight">
+            <h1 id="navSingkatan" class="text-base font-bold">OPR</h1>
+            <span id="navSekolah" class="text-[11px] text-white/70"></span>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="text-right text-white hidden sm:block leading-tight">
+            <div id="navNama" class="text-xs font-bold"></div>
+            <div id="navRole" class="text-[10px] text-white/60 uppercase tracking-wider"></div>
+          </div>
+          <button onclick="logKeluar()" class="bg-white/15 hover:bg-white/25 text-white px-3 py-2 rounded-lg text-xs font-bold">
+            <i class="fas fa-right-from-bracket"></i><span class="hidden sm:inline ml-1.5">Keluar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-4 lg:px-8 pt-5">
+    <div id="barisTab" class="flex gap-1.5 flex-wrap bg-white p-1.5 rounded-xl border border-slate-200"></div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 lg:px-8">
+
+    <!-- ---------- TAB: BORANG ---------- -->
+    <section id="tabBorang" class="tab-isi grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-4 space-y-5">
+        <div class="kad relative">
+          <div id="lencanaEdit" class="hidden absolute top-4 right-4 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded border border-amber-200">MOD EDIT</div>
+          <h2 class="text-base font-bold mb-4"><i class="fas fa-pen-to-square mr-2 teks-w2"></i>Maklumat Laporan</h2>
+          <form id="formOpr" class="space-y-3.5" onsubmit="return false">
+            <input type="hidden" id="fId">
+            <div><label class="lbl">Nama Program / Pertandingan</label>
+              <input id="fTajuk" class="inp" oninput="lukisPratonton()" placeholder="Contoh: Kejohanan Bola Sepak MSSD"></div>
+
+            <div>
+              <label class="lbl">Unit Kokurikulum</label>
+              <div class="relative">
+                <input type="hidden" id="fUnit">
+                <input id="cariUnit" class="inp cursor-pointer" placeholder="Cari atau pilih unit..." autocomplete="off"
+                       onfocus="bukaDropdown()" onkeyup="tapisUnit(this.value)">
+                <div class="absolute right-3 top-3 text-slate-400 text-xs pointer-events-none"><i class="fas fa-chevron-down"></i></div>
+                <div id="ddUnit" class="hidden absolute z-30 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto scroll"></div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class="lbl">Anjuran</label><select id="fAnjuran" class="inp" onchange="lukisPratonton()"></select></div>
+              <div><label class="lbl">Peringkat</label><select id="fPeringkat" class="inp" onchange="lukisPratonton()"></select></div>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-3">
+              <p class="lbl mb-0">Perincian Program</p>
+              <div><label class="text-xs text-slate-500">Tarikh Pelaksanaan</label>
+                <input type="date" id="fTarikh" class="inp text-xs" onchange="lukisPratonton()"></div>
+              <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-xs text-slate-500">Murid Lelaki</label>
+                  <input type="number" min="0" id="fLelaki" class="inp text-xs" oninput="lukisPratonton()" placeholder="0"></div>
+                <div><label class="text-xs text-slate-500">Murid Perempuan</label>
+                  <input type="number" min="0" id="fPerempuan" class="inp text-xs" oninput="lukisPratonton()" placeholder="0"></div>
+              </div>
+            </div>
+
+            <div><label class="lbl">Objektif</label><textarea id="fObjektif" rows="3" class="inp" oninput="lukisPratonton()"></textarea></div>
+            <div><label class="lbl text-rose-600">Kaedah Pelaksanaan</label><select id="fKaedah" class="inp" onchange="lukisPratonton()"></select></div>
+            <div><label class="lbl text-emerald-600">Penambahbaikan</label><textarea id="fImprove" rows="2" class="inp" oninput="lukisPratonton()"></textarea></div>
+            <div><label class="lbl text-amber-600">Rumusan</label><textarea id="fRumusan" rows="2" class="inp" oninput="lukisPratonton()"></textarea></div>
+            <div><label class="lbl">Disediakan Oleh</label><input id="fNama" class="inp" oninput="lukisPratonton()"></div>
+          </form>
+          <button onclick="resetBorang()" class="mt-4 w-full text-slate-400 text-xs hover:text-slate-600 underline">Reset borang</button>
+        </div>
+
+        <div class="kad">
+          <h2 class="text-base font-bold mb-3"><i class="fas fa-paperclip mr-2 text-rose-500"></i>Gambar / PDF Aktiviti</h2>
+          <div class="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300">
+            <input type="file" id="failInput" accept="image/*,application/pdf"
+                   class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-rose-50 file:text-rose-700 mb-3">
+            <input id="failKeterangan" placeholder="Keterangan gambar/fail..." class="inp text-xs mb-3">
+            <button onclick="tambahFail()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2 rounded-lg text-xs font-bold uppercase tracking-wider">
+              <i class="fas fa-plus mr-1"></i>Tambah</button>
+          </div>
+          <div id="senaraiLampiran" class="mt-4 space-y-2"></div>
+        </div>
+
+        <div class="kad border-amber-200 bg-amber-50">
+          <label class="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" id="fConsent" class="mt-1 accent-amber-600 h-4 w-4">
+            <span class="text-[11px] text-slate-600 leading-relaxed" id="teksConsent"></span>
+          </label>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="hantarLaporan('SIMPAN')" class="bg-slate-700 hover:bg-slate-800 text-white py-3 rounded-xl font-bold text-sm">
+            <i class="fas fa-floppy-disk mr-1.5"></i>Simpan Draf</button>
+          <button onclick="hantarLaporan('HANTAR')" class="btn-aksen py-3 rounded-xl font-bold text-sm shadow">
+            <i class="fas fa-paper-plane mr-1.5"></i>Hantar</button>
+        </div>
+      </div>
+
+      <!-- PRATONTON A4 -->
+      <div class="lg:col-span-8">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-base font-bold"><i class="fas fa-file-lines mr-2 teks-w2"></i>Pratonton Laporan</h2>
+          <span class="text-xs text-slate-400">Format A4 &middot; inilah yang akan dijana sebagai PDF</span>
+        </div>
+        <div id="pdfContent">
+          <!-- HALAMAN 1 -->
+          <div class="a4-page" id="pageOne">
+            <div>
+              <div class="flex items-center gap-3 border-b-2 pb-3 mb-4" style="border-color:var(--w1)">
+                <img id="pvLogo1" class="h-14 w-14 object-contain hidden" alt="">
+                <div class="flex-1 text-center">
+                  <h1 id="pvSekolah" class="text-lg font-bold" style="color:var(--w2)"></h1>
+                  <p id="pvAlamat" class="text-[10px] text-slate-500"></p>
+                  <p id="pvTajukSistem" class="text-[11px] font-bold mt-1 tracking-wider" style="color:var(--w1)"></p>
+                </div>
+                <img id="pvLogo2" class="h-14 w-14 object-contain hidden" alt="">
+              </div>
+
+              <div class="kotak mb-3">
+                <div class="lbl">Nama Program / Pertandingan</div>
+                <div class="val text-base font-bold" id="pvTajuk">-</div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2 mb-3">
+                <div class="kotak indigo"><div class="lbl">Unit Kokurikulum</div><div class="val text-xs" id="pvUnit">-</div></div>
+                <div class="kotak indigo"><div class="lbl">Anjuran</div><div class="val text-xs" id="pvAnjuran">-</div></div>
+                <div class="kotak indigo"><div class="lbl">Peringkat</div><div class="val text-xs" id="pvPeringkat">-</div></div>
+              </div>
+
+              <div class="grid grid-cols-4 gap-2 mb-3">
+                <div class="kotak emerald"><div class="lbl">Tarikh</div><div class="val text-xs" id="pvTarikh">-</div></div>
+                <div class="kotak emerald"><div class="lbl">Murid Lelaki</div><div class="val text-xs" id="pvLelaki">0</div></div>
+                <div class="kotak emerald"><div class="lbl">Murid Perempuan</div><div class="val text-xs" id="pvPerempuan">0</div></div>
+                <div class="kotak emerald"><div class="lbl">Jumlah</div><div class="val text-xs font-bold" id="pvJumlah">0</div></div>
+              </div>
+
+              <div class="kotak mb-3"><div class="lbl">Objektif</div><div class="val" id="pvObjektif">-</div></div>
+              <div class="kotak rose mb-3"><div class="lbl">Kaedah Pelaksanaan</div><div class="val" id="pvKaedah">-</div></div>
+              <div class="kotak emerald mb-3"><div class="lbl">Penambahbaikan</div><div class="val" id="pvImprove">-</div></div>
+              <div class="kotak amber mb-3"><div class="lbl">Rumusan</div><div class="val" id="pvRumusan">-</div></div>
+            </div>
+
+            <div class="border-t pt-3">
+              <div class="grid grid-cols-2 gap-6 mb-3">
+                <div>
+                  <div class="lbl mb-0">Disediakan Oleh</div>
+                  <div class="val text-xs font-semibold" id="pvNama">-</div>
+                  <div class="border-b border-slate-300 mt-6"></div>
+                  <div class="text-[9px] text-slate-400 mt-1">Tandatangan &amp; Tarikh</div>
+                </div>
+                <div>
+                  <div class="lbl mb-0">Disemak Oleh</div>
+                  <div class="val text-xs font-semibold" id="pvPenyemak">-</div>
+                  <div class="border-b border-slate-300 mt-6"></div>
+                  <div class="text-[9px] text-slate-400 mt-1">Tandatangan &amp; Tarikh</div>
+                </div>
+              </div>
+              <div class="flex justify-between text-[9px] text-slate-400">
+                <div id="pvFooter"></div>
+                <div id="pvTarikhCetak"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HALAMAN 2: GAMBAR -->
+          <div class="a4-page" id="pageTwo">
+            <div>
+              <div class="text-center border-b-2 pb-2 mb-4" style="border-color:var(--w1)">
+                <h2 class="text-sm font-bold tracking-wider" style="color:var(--w2)">LAMPIRAN GAMBAR AKTIVITI</h2>
+                <p id="pvTajuk2" class="text-[10px] text-slate-500"></p>
+              </div>
+              <div id="pvGridGambar" class="grid grid-cols-2 gap-3"></div>
+            </div>
+            <div class="text-right text-[10px] text-slate-400 border-t pt-2" id="pvFooter2"></div>
+          </div>
+
+          <!-- HALAMAN 3+: PDF DILAMPIR -->
+          <div id="pvLampiranPdf"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- TAB: LAPORAN SAYA / SEMUA ---------- -->
+    <section id="tabSenarai" class="tab-isi hidden">
+      <div class="kad">
+        <div class="flex flex-wrap gap-3 justify-between items-center mb-4">
+          <h2 id="tajukSenarai" class="text-base font-bold"><i class="fas fa-list-ul mr-2 teks-w2"></i>Laporan Saya</h2>
+          <div class="flex gap-2">
+            <input id="cariLaporan" class="inp text-xs w-52" placeholder="Cari tajuk / unit / guru..." onkeyup="if(event.key==='Enter')muatSenarai()">
+            <button onclick="muatSenarai()" class="btn-utama px-4 rounded-lg text-xs font-bold"><i class="fas fa-magnifying-glass"></i></button>
+          </div>
+        </div>
+        <div class="overflow-x-auto scroll max-h-[65vh]">
+          <table class="w-full tbl">
+            <thead class="sticky top-0 z-10"><tr>
+              <th>Tarikh</th><th>Program</th><th>Unit</th><th id="thGuru">Guru</th>
+              <th class="text-center">Status</th><th class="text-center">Tindakan</th>
+            </tr></thead>
+            <tbody id="badanSenarai"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- TAB: DASHBOARD ---------- -->
+    <section id="tabDashboard" class="tab-isi hidden space-y-6">
+      <div id="kadStat" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="kad lg:col-span-2">
+          <h3 class="text-sm font-bold mb-4"><i class="fas fa-chart-column mr-2 teks-w2"></i>Laporan Mengikut Unit</h3>
+          <div class="relative h-72"><canvas id="cartaUnit"></canvas></div>
+        </div>
+        <div class="kad">
+          <h3 class="text-sm font-bold mb-4"><i class="fas fa-chart-pie mr-2 teks-w1"></i>Peringkat Pelibatan</h3>
+          <div class="relative h-72"><canvas id="cartaPeringkat"></canvas></div>
+        </div>
+      </div>
+      <div class="kad">
+        <h3 class="text-sm font-bold mb-4"><i class="fas fa-chart-line mr-2 text-amber-500"></i>Trend Bulanan</h3>
+        <div class="relative h-64"><canvas id="cartaBulan"></canvas></div>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="eksportCsv()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold">
+          <i class="fas fa-file-csv mr-1.5"></i>Eksport CSV</button>
+        <button onclick="muatDashboard()" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg text-xs font-bold">
+          <i class="fas fa-rotate mr-1.5"></i>Muat Semula</button>
+      </div>
+    </section>
+
+    <!-- ---------- TAB: TETAPAN ---------- -->
+    <section id="tabTetapan" class="tab-isi hidden space-y-6">
+      <div id="subTabTetapan" class="flex gap-1.5 flex-wrap"></div>
+
+      <!-- Identiti -->
+      <div id="setIdentiti" class="set-isi kad space-y-4">
+        <h3 class="text-base font-bold"><i class="fas fa-school mr-2 teks-w2"></i>Identiti &amp; Penjenamaan</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div><label class="lbl">Nama Sekolah</label><input id="cNAMA_SEKOLAH" class="inp"></div>
+          <div><label class="lbl">Alamat Sekolah</label><input id="cALAMAT_SEKOLAH" class="inp"></div>
+          <div><label class="lbl">Nama Sistem</label><input id="cNAMA_SISTEM" class="inp"></div>
+          <div><label class="lbl">Singkatan (nav bar)</label><input id="cSINGKATAN" class="inp"></div>
+          <div><label class="lbl">Nama Pengetua</label><input id="cNAMA_PENGETUA" class="inp"></div>
+          <div><label class="lbl">Jawatan Penyemak</label><input id="cJAWATAN_PENYEMAK" class="inp"></div>
+          <div><label class="lbl">Teks Footer PDF</label><input id="cFOOTER_PDF" class="inp"></div>
+          <div><label class="lbl">Prefix Nama Fail PDF</label><input id="cPREFIX_FAIL" class="inp"></div>
+          <div><label class="lbl">Tahun Sesi</label><input id="cTAHUN_SESI" class="inp"></div>
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+          <div><label class="lbl">Warna Utama</label><input type="color" id="cWARNA_1" class="inp h-11 p-1"></div>
+          <div><label class="lbl">Warna Kedua</label><input type="color" id="cWARNA_2" class="inp h-11 p-1"></div>
+          <div><label class="lbl">Warna Aksen</label><input type="color" id="cWARNA_AKSEN" class="inp h-11 p-1"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
+          <div>
+            <label class="lbl">Logo 1 (sekolah)</label>
+            <div class="flex items-center gap-3">
+              <img id="pratontonLogo1" class="h-14 w-14 object-contain border rounded bg-white" alt="">
+              <input type="file" id="failLogo1" accept="image/png,image/jpeg,image/webp" class="text-xs flex-1">
+              <button onclick="muatNaikLogo(1)" class="btn-utama px-3 py-2 rounded text-xs font-bold">Naik</button>
+            </div>
+          </div>
+          <div>
+            <label class="lbl">Logo 2 (pilihan)</label>
+            <div class="flex items-center gap-3">
+              <img id="pratontonLogo2" class="h-14 w-14 object-contain border rounded bg-white" alt="">
+              <input type="file" id="failLogo2" accept="image/png,image/jpeg,image/webp" class="text-xs flex-1">
+              <button onclick="muatNaikLogo(2)" class="btn-utama px-3 py-2 rounded text-xs font-bold">Naik</button>
+            </div>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-400">Logo dikecilkan automatik dalam pelayar sebelum dimuat naik (maks 400px, 400KB).</p>
+        <button onclick="simpanTetapan()" class="btn-utama px-6 py-2.5 rounded-lg text-sm font-bold"><i class="fas fa-floppy-disk mr-2"></i>Simpan Tetapan</button>
+      </div>
+
+      <!-- Senarai pilihan -->
+      <div id="setSenarai" class="set-isi hidden kad space-y-4">
+        <h3 class="text-base font-bold"><i class="fas fa-rectangle-list mr-2 teks-w2"></i>Senarai Pilihan (Dropdown)</h3>
+        <p class="text-xs text-slate-500">Satu item satu baris. Susunan dalam kotak ini ialah susunan yang dipapar kepada guru.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="kotakSenarai"></div>
+      </div>
+
+      <!-- Pengguna -->
+      <div id="setPengguna" class="set-isi hidden kad space-y-4">
+        <h3 class="text-base font-bold"><i class="fas fa-users-gear mr-2 teks-w2"></i>Pengurusan Pengguna</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end bg-slate-50 p-4 rounded-xl border">
+          <div><label class="lbl">Emel</label><input id="pgEmail" class="inp" placeholder="guru@sekolah.edu.my"></div>
+          <div><label class="lbl">Nama Penuh</label><input id="pgNama" class="inp"></div>
+          <div><label class="lbl">Peranan</label>
+            <select id="pgRole" class="inp"><option value="guru">Guru</option><option value="admin">Admin</option><option value="superadmin">Super Admin</option></select></div>
+          <button onclick="simpanPengguna()" class="btn-utama py-2.5 rounded-lg text-xs font-bold">Tambah / Kemas Kini</button>
+        </div>
+        <div class="overflow-x-auto scroll">
+          <table class="w-full tbl"><thead><tr>
+            <th>Emel</th><th>Nama</th><th>Peranan</th><th class="text-center">Status</th><th>Log masuk akhir</th><th class="text-center">Tindakan</th>
+          </tr></thead><tbody id="badanPengguna"></tbody></table>
+        </div>
+      </div>
+
+      <!-- PDPA -->
+      <div id="setPdpa" class="set-isi hidden kad space-y-4">
+        <h3 class="text-base font-bold"><i class="fas fa-shield-halved mr-2 teks-w2"></i>PDPA &amp; Keselamatan</h3>
+        <div><label class="lbl">Notis Persetujuan (dipapar kepada guru sebelum hantar)</label>
+          <textarea id="cCONSENT_TEXT" rows="6" class="inp text-xs"></textarea></div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div><label class="lbl">Tempoh Simpan Data (bulan)</label><input id="cRETENTION_BULAN" type="number" min="1" class="inp"></div>
+          <div><label class="lbl">Tempoh Sesi (jam)</label><input id="cSESSION_TTL_JAM" type="number" min="1" max="168" class="inp"></div>
+          <div><label class="lbl">Had Muat Naik (MB)</label><input id="cMAX_UPLOAD_MB" type="number" min="1" max="40" class="inp"></div>
+          <div><label class="lbl">Akses Fail Drive</label>
+            <select id="cPDF_AKSES" class="inp">
+              <option value="PRIVATE">PRIVATE (disyorkan)</option>
+              <option value="LINK">Sesiapa dengan pautan</option>
+            </select></div>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800 leading-relaxed">
+          <b>PRIVATE</b> bermaksud fail PDF dan lampiran tidak boleh dibuka oleh sesiapa yang hanya ada pautan.
+          Guru dan admin membukanya melalui sistem ini, yang mengesahkan token sesi dahulu.
+          Tukar ke <b>Sesiapa dengan pautan</b> hanya jika anda benar-benar perlu berkongsi fail di luar sistem.
+        </div>
+        <div><label class="lbl">Folder Drive (ID)</label><input id="cFOLDER_ID" class="inp text-xs"></div>
+        <button onclick="simpanTetapan()" class="btn-utama px-6 py-2.5 rounded-lg text-sm font-bold"><i class="fas fa-floppy-disk mr-2"></i>Simpan Tetapan</button>
+        <div class="border-t pt-4">
+          <h4 class="text-sm font-bold mb-2">Pembersihan Data (Retention)</h4>
+          <p class="text-xs text-slate-500 mb-3">Padam rekod yang melebihi tempoh simpan. Pralihat dahulu sebelum melaksanakan.</p>
+          <div class="flex gap-3">
+            <button onclick="jalankanPurge('PRALIHAT')" class="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold">Pralihat</button>
+            <button onclick="jalankanPurge('LAKSANA')" class="bg-rose-600 text-white px-4 py-2 rounded-lg text-xs font-bold">Laksana Pembersihan</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit -->
+      <div id="setAudit" class="set-isi hidden kad space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="text-base font-bold"><i class="fas fa-clipboard-list mr-2 teks-w2"></i>Log Audit</h3>
+          <button onclick="muatAudit()" class="bg-slate-700 text-white px-3 py-1.5 rounded text-xs font-bold"><i class="fas fa-rotate"></i></button>
+        </div>
+        <div class="overflow-x-auto scroll max-h-[65vh]">
+          <table class="w-full tbl"><thead class="sticky top-0"><tr>
+            <th>Masa</th><th>Pengguna</th><th>Tindakan</th><th>Sasaran</th><th>Status</th><th>Nota</th>
+          </tr></thead><tbody id="badanAudit"></tbody></table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="text-center text-[11px] text-slate-400 py-6" id="footerApp"></footer>
+</div>
+<script>
+/* =====================================================================
+   SISTEM OPR — LOGIK FRONTEND
+   Tiada rahsia disimpan di sini. Token sesi disimpan dalam sessionStorage
+   (hilang bila tab ditutup), bukan localStorage.
+   Semua data pengguna dipapar guna textContent — bukan innerHTML —
+   supaya tiada laluan XSS dari isi Sheet. (Teknik Sekuriti #6)
+   ===================================================================== */
+
+/* >>> ISI URL WEB APP ANDA DI SINI (berakhir dengan /exec) <<< */
+const SCRIPT_URL = "";
+
+// ---------------------------------------------------------------- state
+let URL_API   = SCRIPT_URL || sessionStorage.getItem('opr_url') || localStorage.getItem('opr_url') || '';
+let TOKEN     = sessionStorage.getItem('opr_token') || '';
+let SESI      = null;
+let CFG       = {};
+let SENARAI   = {};
+let imejBukti = [];      // {nama, dataUrl, keterangan}
+let pdfHalaman= [];      // {nama, halaman:[dataUrl]}
+let carta     = {};
+let cacheSenarai = [];
+
+const LABEL_SENARAI = {
+  UNIT_UNIFORM: 'Unit Beruniform',
+  UNIT_KELAB:   'Kelab / Persatuan',
+  UNIT_SUKAN:   'Sukan / Permainan',
+  ANJURAN:      'Anjuran',
+  PERINGKAT:    'Peringkat Pelibatan',
+  KAEDAH:       'Kaedah Pelaksanaan'
+};
+
+// ---------------------------------------------------------------- utiliti
+const $ = (id) => document.getElementById(id);
+
+function tunjuk(id, papar) { const e = $(id); if (e) e.classList.toggle('hidden', !papar); }
+
+function overlay(papar, teks) {
+  $('overlay').style.display = papar ? 'flex' : 'none';
+  if (teks) $('overlayTeks').textContent = teks;
+}
+
+function toast(ikon, teks) {
+  Swal.fire({ toast: true, position: 'top-end', icon: ikon, title: teks, showConfirmButton: false, timer: 3200, timerProgressBar: true });
+}
+
+function ralat(teks) { Swal.fire({ icon: 'error', title: 'Ralat', text: teks }); }
+
+function tarikhDMY(nilai) {
+  if (!nilai) return '-';
+  const d = new Date(nilai);
+  if (isNaN(d)) return String(nilai);
+  return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear();
+}
+
+function tarikhInputKeDMY(v) {
+  if (!v) return '-';
+  const p = String(v).split('-');
+  return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : v;
+}
+
+/** Cipta elemen dengan selamat — teks sentiasa melalui textContent. */
+function e_(tag, kelas, teks) {
+  const n = document.createElement(tag);
+  if (kelas) n.className = kelas;
+  if (teks !== undefined && teks !== null) n.textContent = String(teks);
+  return n;
+}
+
+function butang(kelas, ikonKelas, tajuk, onClick) {
+  const b = e_('button', kelas);
+  b.title = tajuk;
+  const i = document.createElement('i');
+  i.className = ikonKelas;          // ikon = pemalar dalaman, bukan data pengguna
+  b.appendChild(i);
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+function pilStatus(status) {
+  const s = String(status || 'SIMPAN').toUpperCase();
+  const peta = {
+    'HANTAR':        ['pil bg-indigo-100 text-indigo-700', 'HANTAR'],
+    'TELAH DISEMAK': ['pil bg-teal-100 text-teal-700', 'DISEMAK'],
+    'SIMPAN':        ['pil bg-slate-100 text-slate-600', 'DRAF']
+  };
+  const [kelas, teks] = peta[s] || peta['SIMPAN'];
+  return e_('span', kelas, teks);
+}
+
+// ---------------------------------------------------------------- API
+async function api(action, data, senyap) {
+  if (!URL_API) { paparSetup(); throw new Error('URL API belum ditetapkan'); }
+  const badan = Object.assign({ action: action }, data || {});
+  if (TOKEN) badan.token = TOKEN;
+
+  let res;
+  for (let cuba = 0; cuba < 3; cuba++) {
+    try {
+      res = await fetch(URL_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },  // elak preflight CORS
+        redirect: 'follow',
+        body: JSON.stringify(badan)
+      });
+      if (res.ok) break;
+    } catch (err) {
+      if (cuba === 2) throw new Error('Tidak dapat menghubungi pelayan. Semak sambungan internet.');
+      await new Promise(r => setTimeout(r, 700 * (cuba + 1)));
+    }
+  }
+  if (!res || !res.ok) throw new Error('Pelayan tidak memberi respons.');
+
+  let json;
+  try { json = await res.json(); }
+  catch (err) { throw new Error('Respons pelayan tidak sah. Pastikan Web App di-deploy dengan akses "Anyone".'); }
+
+  if (json && json.sesiTamat) { paksaLogKeluar(); throw new Error(json.ralat); }
+  if (!json || json.ok !== true) {
+    const m = (json && json.ralat) ? json.ralat : 'Permintaan gagal.';
+    if (!senyap) throw new Error(m);
+    return null;
+  }
+  return json;
+}
+
+// ---------------------------------------------------------------- boot
+function paparSetup() {
+  ['skrinLogin', 'skrinTukar', 'app'].forEach(id => tunjuk(id, false));
+  tunjuk('skrinSetup', true);
+}
+
+function simpanSetupUrl() {
+  const v = $('setupUrl').value.trim();
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(v)) {
+    return ralat('URL tidak sah. Ia mesti bermula https://script.google.com/macros/s/ dan berakhir /exec');
+  }
+  localStorage.setItem('opr_url', v);
+  URL_API = v;
+  location.reload();
+}
+
+async function mula() {
+  if (!URL_API) return paparSetup();
+  try {
+    const cfg = await api('CONFIG_AWAM');
+    CFG = cfg;
+    pakaiTema(cfg);
+  } catch (err) {
+    return Swal.fire({ icon: 'error', title: 'Tidak dapat menyambung', text: err.message })
+      .then(paparSetup);
+  }
+
+  if (TOKEN) {
+    try {
+      const r = await api('SAYA');
+      SESI = r.sesi;
+      return masukApp();
+    } catch (err) { TOKEN = ''; sessionStorage.removeItem('opr_token'); }
+  }
+  tunjuk('skrinSetup', false);
+  tunjuk('skrinLogin', true);
+}
+
+function pakaiTema(cfg) {
+  document.documentElement.style.setProperty('--w1', cfg.warna1);
+  document.documentElement.style.setProperty('--w2', cfg.warna2);
+  document.documentElement.style.setProperty('--aksen', cfg.warnaAksen);
+  document.title = cfg.namaSistem + ' — ' + cfg.namaSekolah;
+
+  const pasangLogo = (id, src) => { const n = $(id); if (!n) return; if (src) { n.src = src; n.classList.remove('hidden'); } else { n.classList.add('hidden'); } };
+  pasangLogo('loginLogo1', cfg.logo1); pasangLogo('loginLogo2', cfg.logo2);
+  pasangLogo('navLogo1', cfg.logo1);   pasangLogo('navLogo2', cfg.logo2);
+  pasangLogo('pvLogo1', cfg.logo1);    pasangLogo('pvLogo2', cfg.logo2);
+
+  $('loginNamaSistem').textContent = cfg.namaSistem;
+  $('loginNamaSekolah').textContent = cfg.namaSekolah;
+  $('loginConsent').textContent = cfg.consent || '';
+  $('navSingkatan').textContent = cfg.singkatan;
+  $('navSekolah').textContent = cfg.namaSekolah;
+  $('pvSekolah').textContent = cfg.namaSekolah;
+  $('pvAlamat').textContent = cfg.alamatSekolah || '';
+  $('pvTajukSistem').textContent = (cfg.namaSistem || '').toUpperCase();
+  $('pvPenyemak').textContent = cfg.jawatanPenyemak || '-';
+  $('teksConsent').textContent = cfg.consent || 'Saya mengesahkan maklumat ini benar dan kebenaran telah diperoleh untuk gambar yang memaparkan murid.';
+  $('footerApp').textContent = cfg.namaSistem + ' v' + (cfg.versi || '2.0') + ' · ' + cfg.namaSekolah;
+}
+
+// ---------------------------------------------------------------- auth
+$('formLogin').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  overlay(true, 'Mengesahkan...');
+  try {
+    const r = await api('LOGIN', {
+      email: $('loginEmail').value.trim(),
+      password: $('loginPassword').value
+    });
+    TOKEN = r.token;
+    sessionStorage.setItem('opr_token', TOKEN);
+    SESI = { email: r.pengguna.email, nama: r.pengguna.nama, role: r.pengguna.role };
+    $('loginPassword').value = '';
+    overlay(false);
+    if (r.pengguna.mestiTukarPassword) {
+      tunjuk('skrinLogin', false); tunjuk('skrinTukar', true);
+    } else { masukApp(); }
+  } catch (err) { overlay(false); ralat(err.message); }
+});
+
+$('formTukar').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  if ($('pwBaru').value !== $('pwBaru2').value) return ralat('Kata laluan baharu tidak sepadan.');
+  overlay(true, 'Menyimpan...');
+  try {
+    await api('TUKAR_PASSWORD', { passwordLama: $('pwLama').value, passwordBaru: $('pwBaru').value });
+    overlay(false);
+    await Swal.fire({ icon: 'success', title: 'Berjaya', text: 'Sila log masuk semula dengan kata laluan baharu.' });
+    paksaLogKeluar();
+  } catch (err) { overlay(false); ralat(err.message); }
+});
+
+async function logKeluar() {
+  try { if (TOKEN) await api('LOGOUT', {}, true); } catch (e) {}
+  paksaLogKeluar();
+}
+
+function paksaLogKeluar() {
+  TOKEN = ''; SESI = null;
+  sessionStorage.removeItem('opr_token');
+  location.reload();
+}
+
+// ---------------------------------------------------------------- shell
+const TAB_DEF = [
+  { id: 'tabBorang',    label: 'Borang OPR',     ikon: 'fa-pen-to-square', role: ['guru', 'admin', 'superadmin'] },
+  { id: 'tabSenarai',   label: 'Laporan',        ikon: 'fa-list-ul',       role: ['guru', 'admin', 'superadmin'] },
+  { id: 'tabDashboard', label: 'Dashboard',      ikon: 'fa-chart-simple',  role: ['admin', 'superadmin'] },
+  { id: 'tabTetapan',   label: 'Tetapan Sistem', ikon: 'fa-gear',          role: ['admin', 'superadmin'] }
+];
+
+const SUBTAB_DEF = [
+  { id: 'setIdentiti', label: 'Identiti & Jenama' },
+  { id: 'setSenarai',  label: 'Senarai Pilihan' },
+  { id: 'setPengguna', label: 'Pengguna' },
+  { id: 'setPdpa',     label: 'PDPA & Keselamatan' },
+  { id: 'setAudit',    label: 'Log Audit' }
+];
+
+function adminKah() { return SESI && (SESI.role === 'admin' || SESI.role === 'superadmin'); }
+
+async function masukApp() {
+  ['skrinSetup', 'skrinLogin', 'skrinTukar'].forEach(id => tunjuk(id, false));
+  tunjuk('app', true);
+  $('navNama').textContent = SESI.nama;
+  $('navRole').textContent = SESI.role;
+  $('fNama').value = SESI.nama;
+  $('tajukSenarai').textContent = adminKah() ? 'Semua Laporan' : 'Laporan Saya';
+  $('thGuru').style.display = adminKah() ? '' : 'none';
+
+  // bina tab
+  const bar = $('barisTab'); bar.textContent = '';
+  TAB_DEF.filter(t => t.role.indexOf(SESI.role) !== -1).forEach((t, i) => {
+    const b = e_('button', 'tab-btn' + (i === 0 ? ' aktif' : ''));
+    const ic = document.createElement('i'); ic.className = 'fas ' + t.ikon + ' mr-1.5';
+    b.appendChild(ic); b.appendChild(document.createTextNode(t.label));
+    b.addEventListener('click', () => tukarTab(t.id, b));
+    bar.appendChild(b);
+  });
+
+  const sbar = $('subTabTetapan'); sbar.textContent = '';
+  SUBTAB_DEF.forEach((s, i) => {
+    const b = e_('button', 'tab-btn bg-white border border-slate-200' + (i === 0 ? ' aktif' : ''), s.label);
+    b.addEventListener('click', () => tukarSubTab(s.id, b));
+    sbar.appendChild(b);
+  });
+
+  try { SENARAI = (await api('SENARAI_PILIHAN')).senarai; }
+  catch (err) { SENARAI = {}; }
+  isiSemuaDropdown();
+  lukisPratonton();
+}
+
+function tukarTab(id, btn) {
+  document.querySelectorAll('.tab-isi').forEach(s => s.classList.add('hidden'));
+  tunjuk(id, true);
+  document.querySelectorAll('#barisTab .tab-btn').forEach(b => b.classList.remove('aktif'));
+  btn.classList.add('aktif');
+  if (id === 'tabSenarai') muatSenarai();
+  if (id === 'tabDashboard') muatDashboard();
+  if (id === 'tabTetapan') muatTetapan();
+}
+
+function tukarSubTab(id, btn) {
+  document.querySelectorAll('.set-isi').forEach(s => s.classList.add('hidden'));
+  tunjuk(id, true);
+  document.querySelectorAll('#subTabTetapan .tab-btn').forEach(b => b.classList.remove('aktif'));
+  btn.classList.add('aktif');
+  if (id === 'setPengguna') muatPengguna();
+  if (id === 'setAudit') muatAudit();
+  if (id === 'setSenarai') lukisEditorSenarai();
+}
+
+// ---------------------------------------------------------------- dropdown
+function isiSelect(id, items, teksKosong) {
+  const s = $(id); if (!s) return;
+  s.textContent = '';
+  s.appendChild(e_('option', '', teksKosong)).value = '';
+  (items || []).forEach(v => { const o = e_('option', '', v); o.value = v; s.appendChild(o); });
+}
+
+function isiSemuaDropdown() {
+  isiSelect('fAnjuran',   SENARAI.ANJURAN,   'Pilih penganjur...');
+  isiSelect('fPeringkat', SENARAI.PERINGKAT, 'Pilih peringkat...');
+  isiSelect('fKaedah',    SENARAI.KAEDAH,    'Pilih kaedah...');
+  lukisDropdownUnit();
+}
+
+function lukisDropdownUnit() {
+  const dd = $('ddUnit'); dd.textContent = '';
+  ['UNIT_UNIFORM', 'UNIT_KELAB', 'UNIT_SUKAN'].forEach(kat => {
+    const senarai = SENARAI[kat] || [];
+    if (!senarai.length) return;
+    dd.appendChild(e_('div', 'dd-kat', LABEL_SENARAI[kat]));
+    senarai.forEach(v => {
+      const it = e_('div', 'dd-item', v);          // textContent — selamat
+      it.addEventListener('click', () => pilihUnit(v));
+      dd.appendChild(it);
+    });
+  });
+}
+
+function bukaDropdown() { $('ddUnit').classList.remove('hidden'); }
+
+function pilihUnit(v) {
+  $('fUnit').value = v;
+  $('cariUnit').value = v;
+  $('ddUnit').classList.add('hidden');
+  lukisPratonton();
+}
+
+function tapisUnit(q) {
+  bukaDropdown();
+  const rendah = q.toLowerCase();
+  const dd = $('ddUnit');
+  dd.querySelectorAll('.dd-item').forEach(it => {
+    it.style.display = it.textContent.toLowerCase().indexOf(rendah) !== -1 ? '' : 'none';
+  });
+  dd.querySelectorAll('.dd-kat').forEach(kat => {
+    let ada = false, sib = kat.nextElementSibling;
+    while (sib && !sib.classList.contains('dd-kat')) { if (sib.style.display !== 'none') ada = true; sib = sib.nextElementSibling; }
+    kat.style.display = ada ? '' : 'none';
+  });
+}
+
+document.addEventListener('click', (ev) => {
+  const kotak = $('cariUnit');
+  if (kotak && !kotak.parentElement.contains(ev.target)) $('ddUnit').classList.add('hidden');
+});
+
+// ---------------------------------------------------------------- pratonton
+function lukisPratonton() {
+  const g = (id) => $(id).value.trim();
+  const isi = (id, v) => { $(id).textContent = (v === '' || v === null || v === undefined) ? '-' : v; };
+
+  isi('pvTajuk', g('fTajuk'));
+  $('pvTajuk2').textContent = g('fTajuk');
+  isi('pvUnit', g('fUnit'));
+  isi('pvAnjuran', g('fAnjuran'));
+  isi('pvPeringkat', g('fPeringkat'));
+  isi('pvTarikh', g('fTarikh') ? tarikhInputKeDMY(g('fTarikh')) : '');
+  const l = Number(g('fLelaki')) || 0, p = Number(g('fPerempuan')) || 0;
+  isi('pvLelaki', l); isi('pvPerempuan', p); isi('pvJumlah', l + p);
+  isi('pvObjektif', g('fObjektif'));
+  isi('pvKaedah', g('fKaedah'));
+  isi('pvImprove', g('fImprove'));
+  isi('pvRumusan', g('fRumusan'));
+  isi('pvNama', g('fNama'));
+
+  const footer = (CFG.namaSekolah || '') + (CFG.footerPdf ? ' · ' + CFG.footerPdf : '');
+  $('pvFooter').textContent = footer;
+  $('pvFooter2').textContent = footer;
+  $('pvTarikhCetak').textContent = 'Dijana: ' + tarikhDMY(new Date());
+
+  const grid = $('pvGridGambar'); grid.textContent = '';
+  if (!imejBukti.length) {
+    grid.appendChild(e_('p', 'col-span-2 text-center text-xs text-slate-400 italic py-10', 'Tiada gambar dilampirkan.'));
+  }
+  imejBukti.forEach(img => {
+    const kotak = e_('div', 'border border-slate-200 rounded-lg overflow-hidden bg-white');
+    const im = document.createElement('img');
+    im.src = img.dataUrl; im.className = 'w-full h-40 object-cover'; im.alt = '';
+    kotak.appendChild(im);
+    kotak.appendChild(e_('p', 'text-[10px] p-2 text-slate-600 text-center', img.keterangan || img.nama));
+    grid.appendChild(kotak);
+  });
+}
+
+// ---------------------------------------------------------------- lampiran
+function kecilkanImej(dataUrl, maksSisi, kualiti) {
+  return new Promise((selesai) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width: w, height: h } = img;
+      const skala = Math.min(1, maksSisi / Math.max(w, h));
+      w = Math.round(w * skala); h = Math.round(h * skala);
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      selesai(c.toDataURL('image/jpeg', kualiti || 0.82));
+    };
+    img.onerror = () => selesai(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+async function tambahFail() {
+  const inp = $('failInput');
+  if (!inp.files || !inp.files[0]) return toast('warning', 'Sila pilih fail dahulu.');
+  const fail = inp.files[0];
+  const keterangan = $('failKeterangan').value.trim();
+
+  if (fail.size > 25 * 1024 * 1024) return ralat('Fail melebihi 25MB.');
+
+  overlay(true, 'Memproses fail...');
+  const baca = new FileReader();
+  baca.onload = async (ev) => {
+    try {
+      if (fail.type === 'application/pdf') {
+        await lampirPdf(ev.target.result, fail.name);
+      } else if (/^image\//.test(fail.type)) {
+        const kecil = await kecilkanImej(ev.target.result, 1400, 0.82);
+        imejBukti.push({ nama: fail.name, dataUrl: kecil, keterangan: keterangan });
+      } else {
+        overlay(false); return ralat('Hanya gambar dan PDF dibenarkan.');
+      }
+      inp.value = ''; $('failKeterangan').value = '';
+      lukisSenaraiLampiran(); lukisPratonton();
+      overlay(false); toast('success', 'Lampiran ditambah.');
+    } catch (err) { overlay(false); ralat('Gagal memproses fail: ' + err.message); }
+  };
+  baca.readAsDataURL(fail);
+}
+
+async function lampirPdf(dataUrl, nama) {
+  const bin = atob(dataUrl.split(',')[1]);
+  const tugas = pdfjsLib.getDocument({ data: bin });
+  const pdf = await tugas.promise;
+  if (pdf.numPages > 15) throw new Error('PDF melebihi 15 halaman.');
+  const halaman = [];
+  for (let n = 1; n <= pdf.numPages; n++) {
+    const hal = await pdf.getPage(n);
+    const vp = hal.getViewport({ scale: 1.6 });
+    const c = document.createElement('canvas');
+    c.width = vp.width; c.height = vp.height;
+    await hal.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    halaman.push(c.toDataURL('image/jpeg', 0.8));
+  }
+  pdfHalaman.push({ nama: nama, halaman: halaman });
+  lukisHalamanPdf();
+}
+
+function lukisHalamanPdf() {
+  const bekas = $('pvLampiranPdf'); bekas.textContent = '';
+  pdfHalaman.forEach(fail => {
+    fail.halaman.forEach((src, i) => {
+      const muka = e_('div', 'a4-page lampiran');
+      const kepala = e_('div', 'text-center border-b-2 pb-2 mb-3');
+      kepala.style.borderColor = CFG.warna1 || '#0f766e';
+      kepala.appendChild(e_('h2', 'text-sm font-bold', 'LAMPIRAN: ' + fail.nama));
+      kepala.appendChild(e_('p', 'text-[10px] text-slate-500', 'Halaman ' + (i + 1) + ' daripada ' + fail.halaman.length));
+      muka.appendChild(kepala);
+      const im = document.createElement('img');
+      im.src = src; im.className = 'w-full object-contain'; im.style.maxHeight = '240mm'; im.alt = '';
+      muka.appendChild(im);
+      bekas.appendChild(muka);
+    });
+  });
+}
+
+function lukisSenaraiLampiran() {
+  const l = $('senaraiLampiran'); l.textContent = '';
+  if (!imejBukti.length && !pdfHalaman.length) {
+    l.appendChild(e_('p', 'text-xs text-slate-400 italic text-center', 'Belum ada lampiran.'));
+    return;
+  }
+  imejBukti.forEach((img, i) => {
+    const baris = e_('div', 'flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200');
+    const th = document.createElement('img');
+    th.src = img.dataUrl; th.className = 'h-9 w-9 object-cover rounded'; th.alt = '';
+    baris.appendChild(th);
+    baris.appendChild(e_('span', 'flex-1 text-xs truncate', img.keterangan || img.nama));
+    baris.appendChild(butang('text-rose-500 hover:text-rose-700 px-2', 'fas fa-trash', 'Buang', () => {
+      imejBukti.splice(i, 1); lukisSenaraiLampiran(); lukisPratonton();
+    }));
+    l.appendChild(baris);
+  });
+  pdfHalaman.forEach((f, i) => {
+    const baris = e_('div', 'flex items-center gap-2 bg-rose-50 p-2 rounded-lg border border-rose-200');
+    const ic = document.createElement('i'); ic.className = 'fas fa-file-pdf text-rose-500 px-1';
+    baris.appendChild(ic);
+    baris.appendChild(e_('span', 'flex-1 text-xs truncate', f.nama + ' (' + f.halaman.length + ' hlm)'));
+    baris.appendChild(butang('text-rose-500 hover:text-rose-700 px-2', 'fas fa-trash', 'Buang', () => {
+      pdfHalaman.splice(i, 1); lukisHalamanPdf(); lukisSenaraiLampiran();
+    }));
+    l.appendChild(baris);
+  });
+}
+
+// ---------------------------------------------------------------- hantar
+async function hantarLaporan(status) {
+  if (!$('fTajuk').value.trim()) return ralat('Sila isi nama program / pertandingan.');
+  if (!$('fUnit').value) return ralat('Sila pilih unit kokurikulum.');
+  if (!$('fId').value && !$('fConsent').checked) return ralat('Sila tanda kotak persetujuan notis PDPA.');
+
+  overlay(true, 'Menjana PDF...');
+  try {
+    const pilihan = {
+      margin: 0,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true, scrollY: 0, letterRendering: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+    const blob = await html2pdf().set(pilihan).from($('pdfContent')).outputPdf('blob');
+    const b64 = await blobKeBase64(blob);
+
+    overlay(true, 'Memuat naik...');
+    const prefix = (CFG.singkatan || 'OPR');
+    const tajukBersih = $('fTajuk').value.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 60);
+    const tarikh = ($('fTarikh').value || new Date().toISOString().slice(0, 10)).split('-').reverse().join('');
+
+    const hasil = await api('SIMPAN_LAPORAN', {
+      id: $('fId').value || '',
+      status: status,
+      consent: $('fConsent').checked,
+      gantiLampiran: !!$('fId').value,   // mod edit: set lampiran digantikan dengan apa yang dipapar
+      pdfBase64: b64,
+      pdfNama: prefix + '_' + tajukBersih + '_' + tarikh + '.pdf',
+      lampiran: imejBukti.map(img => ({
+        base64: img.dataUrl.split(',')[1],
+        mimeType: img.dataUrl.split(',')[0].split(':')[1].split(';')[0],
+        nama: img.nama
+      })),
+      data: {
+        nama: $('fNama').value, tajuk: $('fTajuk').value, unit: $('fUnit').value,
+        anjuran: $('fAnjuran').value, peringkat: $('fPeringkat').value,
+        tarikhProgram: $('fTarikh').value, jumLelaki: $('fLelaki').value,
+        jumPerempuan: $('fPerempuan').value, objektif: $('fObjektif').value,
+        kaedah: $('fKaedah').value, penambahbaikan: $('fImprove').value,
+        rumusan: $('fRumusan').value
+      }
+    });
+
+    overlay(false);
+    await Swal.fire({ icon: 'success', title: 'Berjaya', text: status === 'HANTAR' ? 'Laporan telah dihantar.' : 'Draf disimpan.' });
+    resetBorang();
+  } catch (err) { overlay(false); ralat(err.message); }
+}
+
+function blobKeBase64(blob) {
+  return new Promise((selesai, gagal) => {
+    const r = new FileReader();
+    r.onloadend = () => selesai(String(r.result).split(',')[1]);
+    r.onerror = gagal;
+    r.readAsDataURL(blob);
+  });
+}
+
+function resetBorang() {
+  ['fId', 'fTajuk', 'fUnit', 'cariUnit', 'fTarikh', 'fLelaki', 'fPerempuan',
+   'fObjektif', 'fImprove', 'fRumusan'].forEach(id => { $(id).value = ''; });
+  ['fAnjuran', 'fPeringkat', 'fKaedah'].forEach(id => { $(id).selectedIndex = 0; });
+  $('fNama').value = SESI ? SESI.nama : '';
+  $('fConsent').checked = false;
+  imejBukti = []; pdfHalaman = [];
+  $('lencanaEdit').classList.add('hidden');
+  lukisSenaraiLampiran(); lukisHalamanPdf(); lukisPratonton();
+}
+
+// ---------------------------------------------------------------- senarai
+async function muatSenarai() {
+  const tb = $('badanSenarai');
+  tb.textContent = '';
+  tb.appendChild(barisKosong(6, 'Memuatkan...'));
+  try {
+    const r = await api('SENARAI_LAPORAN', { carian: $('cariLaporan').value.trim() });
+    cacheSenarai = r.data;
+    tb.textContent = '';
+    if (!r.data.length) { tb.appendChild(barisKosong(6, 'Tiada laporan dijumpai.')); return; }
+
+    r.data.forEach(rec => {
+      const tr = document.createElement('tr');
+      tr.appendChild(e_('td', '', tarikhDMY(rec.timestamp)));
+      tr.appendChild(e_('td', 'font-semibold', rec.tajuk || '-'));
+      tr.appendChild(e_('td', 'text-xs', rec.unit || '-'));
+      const tdGuru = e_('td', 'text-xs', rec.nama || '-');
+      tdGuru.style.display = adminKah() ? '' : 'none';
+      tr.appendChild(tdGuru);
+      const tdSt = e_('td', 'text-center'); tdSt.appendChild(pilStatus(rec.status)); tr.appendChild(tdSt);
+
+      const tdAksi = e_('td', 'text-center whitespace-nowrap');
+      if (rec.adaPdf) {
+        tdAksi.appendChild(butang('text-rose-600 hover:bg-rose-50 px-2 py-1 rounded', 'fas fa-file-pdf', 'Buka PDF',
+          () => bukaPdf(rec.id)));
+      }
+      const bolehUbah = adminKah() || rec.status !== 'TELAH DISEMAK';
+      if (bolehUbah) {
+        tdAksi.appendChild(butang('text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded', 'fas fa-pen', 'Edit',
+          () => editLaporan(rec.id)));
+        tdAksi.appendChild(butang('text-slate-500 hover:bg-slate-100 px-2 py-1 rounded', 'fas fa-trash', 'Padam',
+          () => padamLaporan(rec.id, rec.tajuk)));
+      }
+      if (adminKah() && rec.status === 'HANTAR') {
+        tdAksi.appendChild(butang('text-teal-600 hover:bg-teal-50 px-2 py-1 rounded', 'fas fa-circle-check', 'Tanda telah disemak',
+          () => tandaDisemak(rec.id)));
+      }
+      tr.appendChild(tdAksi);
+      tb.appendChild(tr);
+    });
+  } catch (err) { tb.textContent = ''; tb.appendChild(barisKosong(6, err.message)); }
+}
+
+function barisKosong(bil, teks) {
+  const tr = document.createElement('tr');
+  const td = e_('td', 'text-center py-10 text-slate-400 italic text-sm', teks);
+  td.colSpan = bil; tr.appendChild(td); return tr;
+}
+
+async function bukaPdf(id) {
+  overlay(true, 'Membuka fail...');
+  try {
+    const rec = await api('BACA_LAPORAN', { id: id });
+    if (!rec.data.pdfFileId) { overlay(false); return toast('warning', 'Tiada PDF untuk rekod ini.'); }
+    const f = await api('AMBIL_FAIL', { id: id, fileId: rec.data.pdfFileId });
+    const bytes = Uint8Array.from(atob(f.base64), c => c.charCodeAt(0));
+    const url = URL.createObjectURL(new Blob([bytes], { type: f.mimeType }));
+    overlay(false);
+    const a = document.createElement('a');
+    a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.download = f.nama;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (err) { overlay(false); ralat(err.message); }
+}
+
+async function editLaporan(id) {
+  overlay(true, 'Memuatkan rekod...');
+  try {
+    const r = await api('BACA_LAPORAN', { id: id });
+    const d = r.data;
+    $('fId').value = d.id;
+    $('fTajuk').value = d.tajuk; $('fUnit').value = d.unit; $('cariUnit').value = d.unit;
+    $('fAnjuran').value = d.anjuran; $('fPeringkat').value = d.peringkat; $('fKaedah').value = d.kaedah;
+    $('fTarikh').value = d.tarikhProgram; $('fLelaki').value = d.jumLelaki; $('fPerempuan').value = d.jumPerempuan;
+    $('fObjektif').value = d.objektif; $('fImprove').value = d.penambahbaikan;
+    $('fRumusan').value = d.rumusan; $('fNama').value = d.nama;
+    $('fConsent').checked = true;
+    imejBukti = []; pdfHalaman = [];
+
+    // Tarik semula lampiran gambar sedia ada supaya pratonton dan PDF baharu
+    // kekal lengkap. Fail Drive adalah PRIVATE, jadi ia melalui proxy bertoken.
+    const idFail = (d.lampiranIds || []);
+    for (let i = 0; i < idFail.length; i++) {
+      overlay(true, 'Memuatkan lampiran ' + (i + 1) + '/' + idFail.length + '...');
+      try {
+        const f = await api('AMBIL_FAIL', { id: d.id, fileId: idFail[i] });
+        if (/^image\//.test(f.mimeType)) {
+          imejBukti.push({ nama: f.nama, dataUrl: 'data:' + f.mimeType + ';base64,' + f.base64, keterangan: '' });
+        }
+      } catch (e) { /* fail hilang atau terlalu besar — langkau */ }
+    }
+
+    lukisSenaraiLampiran(); lukisHalamanPdf(); lukisPratonton();
+    $('lencanaEdit').classList.remove('hidden');
+    overlay(false);
+    document.querySelectorAll('#barisTab .tab-btn')[0].click();
+    Swal.fire({ icon: 'info', title: 'Mod Edit',
+      text: 'Gambar sedia ada telah dimuatkan semula. Apa yang anda nampak dalam pratonton ialah apa yang akan disimpan. Halaman PDF yang dilampirkan sebelum ini perlu dimuat naik semula jika masih diperlukan.' });
+  } catch (err) { overlay(false); ralat(err.message); }
+}
+
+async function padamLaporan(id, tajuk) {
+  const sah = await Swal.fire({
+    icon: 'warning', title: 'Padam laporan?', text: tajuk || '',
+    showCancelButton: true, confirmButtonColor: '#e11d48', confirmButtonText: 'Ya, padam'
+  });
+  if (!sah.isConfirmed) return;
+  overlay(true, 'Memadam...');
+  try { await api('PADAM_LAPORAN', { id: id }); overlay(false); toast('success', 'Laporan dipadam.'); muatSenarai(); }
+  catch (err) { overlay(false); ralat(err.message); }
+}
+
+async function tandaDisemak(id) {
+  overlay(true, 'Mengemas kini...');
+  try { await api('TANDA_DISEMAK', { id: id }); overlay(false); toast('success', 'Ditanda telah disemak.'); muatSenarai(); }
+  catch (err) { overlay(false); ralat(err.message); }
+}
+
+// ---------------------------------------------------------------- dashboard
+async function muatDashboard() {
+  try {
+    const s = await api('STATISTIK');
+    const kad = $('kadStat'); kad.textContent = '';
+    [
+      ['Jumlah Laporan', s.jumlah, 'fa-file-lines', '#4f46e5', '#eef2ff'],
+      ['Belum Disemak', s.hantar, 'fa-hourglass-half', '#d97706', '#fffbeb'],
+      ['Telah Disemak', s.disemak, 'fa-circle-check', '#0d9488', '#f0fdfa'],
+      ['Pelibatan Murid', s.muridLelaki + s.muridPerempuan, 'fa-users', '#e11d48', '#fff1f2']
+    ].forEach(([label, nilai, ikon, warna, latar]) => {
+      const k = e_('div', 'kad flex items-center justify-between !p-5');
+      k.style.borderLeft = '4px solid ' + warna;
+      const kiri = e_('div');
+      kiri.appendChild(e_('p', 'text-[10px] font-bold text-slate-400 uppercase tracking-wider', label));
+      const angka = e_('h3', 'text-2xl font-bold mt-1', nilai);
+      angka.style.color = warna;
+      kiri.appendChild(angka);
+      k.appendChild(kiri);
+      const kanan = e_('div', 'p-3 rounded-full');
+      kanan.style.background = latar; kanan.style.color = warna;
+      const ic = document.createElement('i'); ic.className = 'fas ' + ikon + ' text-xl';
+      kanan.appendChild(ic); k.appendChild(kanan);
+      kad.appendChild(k);
+    });
+
+    const warna = ['#0f766e', '#4f46e5', '#e11d48', '#d97706', '#059669', '#2563eb', '#db2777', '#7c3aed'];
+    lukisCarta('cartaUnit', 'bar', Object.keys(s.unit), Object.values(s.unit), warna, false);
+    lukisCarta('cartaPeringkat', 'doughnut', Object.keys(s.peringkat), Object.values(s.peringkat), warna, true);
+    const bulanKunci = Object.keys(s.bulan).sort();
+    lukisCarta('cartaBulan', 'line', bulanKunci, bulanKunci.map(k => s.bulan[k]), ['#4f46e5'], false);
+  } catch (err) { ralat(err.message); }
+}
+
+function lukisCarta(idKanvas, jenis, label, data, warna, legend) {
+  if (carta[idKanvas]) carta[idKanvas].destroy();
+  carta[idKanvas] = new Chart($(idKanvas).getContext('2d'), {
+    type: jenis,
+    data: {
+      labels: label,
+      datasets: [{
+        label: 'Bilangan laporan',
+        data: data,
+        backgroundColor: jenis === 'line' ? 'rgba(79,70,229,.12)' : warna,
+        borderColor: jenis === 'line' ? '#4f46e5' : '#fff',
+        borderWidth: jenis === 'doughnut' ? 2 : 1,
+        fill: jenis === 'line',
+        tension: .3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: jenis === 'bar' ? 'y' : 'x',
+      plugins: { legend: { display: legend, position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } },
+      scales: jenis === 'doughnut' ? {} : { x: { ticks: { font: { size: 10 } } }, y: { ticks: { font: { size: 10 } }, beginAtZero: true } }
+    }
+  });
+}
+
+async function eksportCsv() {
+  overlay(true, 'Menyediakan fail...');
+  try {
+    const r = await api('EKSPORT_DATA');
+    const petik = (v) => '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"';
+    const baris = [r.kolum.map(petik).join(',')];
+    r.data.forEach(o => baris.push(r.kolum.map(k => petik(o[k])).join(',')));
+    const blob = new Blob(['﻿' + baris.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'OPR_Eksport_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    overlay(false); toast('success', 'CSV dimuat turun.');
+  } catch (err) { overlay(false); ralat(err.message); }
+}
+
+// ---------------------------------------------------------------- tetapan
+async function muatTetapan() {
+  try {
+    const r = await api('CONFIG_PENUH');
+    const c = r.config;
+    ['NAMA_SEKOLAH', 'ALAMAT_SEKOLAH', 'NAMA_SISTEM', 'SINGKATAN', 'NAMA_PENGETUA',
+     'JAWATAN_PENYEMAK', 'FOOTER_PDF', 'PREFIX_FAIL', 'TAHUN_SESI', 'WARNA_1', 'WARNA_2',
+     'WARNA_AKSEN', 'CONSENT_TEXT', 'RETENTION_BULAN', 'SESSION_TTL_JAM', 'MAX_UPLOAD_MB',
+     'PDF_AKSES', 'FOLDER_ID'].forEach(k => { const n = $('c' + k); if (n) n.value = c[k] || ''; });
+    $('pratontonLogo1').src = CFG.logo1 || '';
+    $('pratontonLogo2').src = CFG.logo2 || '';
+  } catch (err) { ralat(err.message); }
+}
+
+async function simpanTetapan() {
+  const kunci = ['NAMA_SEKOLAH', 'ALAMAT_SEKOLAH', 'NAMA_SISTEM', 'SINGKATAN', 'NAMA_PENGETUA',
+    'JAWATAN_PENYEMAK', 'FOOTER_PDF', 'PREFIX_FAIL', 'TAHUN_SESI', 'WARNA_1', 'WARNA_2',
+    'WARNA_AKSEN', 'CONSENT_TEXT', 'RETENTION_BULAN', 'SESSION_TTL_JAM', 'MAX_UPLOAD_MB',
+    'PDF_AKSES', 'FOLDER_ID'];
+  const cfg = {};
+  kunci.forEach(k => { const n = $('c' + k); if (n && n.value !== '') cfg[k] = n.value; });
+
+  overlay(true, 'Menyimpan...');
+  try {
+    await api('SIMPAN_CONFIG', { config: cfg });
+    const baru = await api('CONFIG_AWAM');
+    CFG = baru; pakaiTema(baru); lukisPratonton();
+    overlay(false); toast('success', 'Tetapan disimpan.');
+  } catch (err) { overlay(false); ralat(err.message); }
+}
+
+async function muatNaikLogo(slot) {
+  const inp = $('failLogo' + slot);
+  if (!inp.files || !inp.files[0]) return toast('warning', 'Sila pilih fail imej.');
+  const fail = inp.files[0];
+  overlay(true, 'Memuat naik logo...');
+  const baca = new FileReader();
+  baca.onload = async (ev) => {
+    try {
+      const kecil = await kecilkanImej(ev.target.result, 400, 0.9);
+      await api('MUAT_NAIK_LOGO', { slot: String(slot), base64: kecil.split(',')[1], mimeType: 'image/jpeg' });
+      const baru = await api('CONFIG_AWAM');
+      CFG = baru; pakaiTema(baru);
+      $('pratontonLogo' + slot).src = slot === 1 ? baru.logo1 : baru.logo2;
+      inp.value = '';
+      overlay(false); toast('success', 'Logo dikemas kini.');
+    } catch (err) { overlay(false); ralat(err.message); }
+  };
+  baca.readAsDataURL(fail);
+}
+
+function lukisEditorSenarai() {
+  const bekas = $('kotakSenarai'); bekas.textContent = '';
+  Object.keys(LABEL_SENARAI).forEach(kat => {
+    const kotak = e_('div', 'space-y-2');
+    kotak.appendChild(e_('label', 'lbl', LABEL_SENARAI[kat]));
+    const ta = document.createElement('textarea');
+    ta.className = 'inp text-xs'; ta.rows = 8; ta.id = 'ta_' + kat;
+    ta.value = (SENARAI[kat] || []).join('\n');
+    kotak.appendChild(ta);
+    const btn = e_('button', 'btn-utama px-4 py-2 rounded-lg text-xs font-bold', 'Simpan ' + LABEL_SENARAI[kat]);
+    btn.addEventListener('click', () => simpanKategori(kat));
+    kotak.appendChild(btn);
+    bekas.appendChild(kotak);
+  });
+}
+
+async function simpanKategori(kat) {
+  const nilai = $('ta_' + kat).value.split('\n').map(s => s.trim()).filter(Boolean);
+  overlay(true, 'Menyimpan...');
+  try {
+    const r = await api('SIMPAN_PILIHAN', { kategori: kat, senarai: nilai });
+    SENARAI = r.senarai;
+    isiSemuaDropdown();
+    overlay(false); toast('success', LABEL_SENARAI[kat] + ' dikemas kini.');
+  } catch (err) { overlay(false); ralat(err.message); }
+}
+
+async function muatPengguna() {
+  const tb = $('badanPengguna'); tb.textContent = '';
+  tb.appendChild(barisKosong(6, 'Memuatkan...'));
+  try {
+    const r = await api('SENARAI_PENGGUNA');
+    tb.textContent = '';
+    r.pengguna.forEach(u => {
+      const tr = document.createElement('tr');
+      tr.appendChild(e_('td', 'text-xs', u.email));
+      tr.appendChild(e_('td', 'font-semibold', u.nama || '-'));
+      tr.appendChild(e_('td', '', u.role));
+      const tdSt = e_('td', 'text-center');
+      tdSt.appendChild(e_('span', 'pil ' + (u.aktif ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'), u.aktif ? 'AKTIF' : 'TIDAK AKTIF'));
+      tr.appendChild(tdSt);
+      tr.appendChild(e_('td', 'text-xs', u.logMasukAkhir ? tarikhDMY(u.logMasukAkhir) : '-'));
+
+      const tdAksi = e_('td', 'text-center whitespace-nowrap');
+      tdAksi.appendChild(butang('text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded', 'fas fa-pen', 'Isi ke borang', () => {
+        $('pgEmail').value = u.email; $('pgNama').value = u.nama; $('pgRole').value = u.role;
+      }));
+      tdAksi.appendChild(butang('text-amber-600 hover:bg-amber-50 px-2 py-1 rounded', 'fas fa-key', 'Reset kata laluan',
+        () => resetPassword(u.email)));
+      tdAksi.appendChild(butang('text-slate-600 hover:bg-slate-100 px-2 py-1 rounded',
+        u.aktif ? 'fas fa-user-slash' : 'fas fa-user-check', u.aktif ? 'Nyahaktif' : 'Aktifkan',
+        () => tukarAktif(u)));
+      tr.appendChild(tdAksi);
+      tb.appendChild(tr);
+    });
+  } catch (err) { tb.textContent = ''; tb.appendChild(barisKosong(6, err.message)); }
+}
+
+async function simpanPengguna() {
+  const email = $('pgEmail').value.trim();
+  if (!email) return ralat('Sila isi emel.');
+  overlay(true, 'Menyimpan...');
+  try {
+    const r = await api('SIMPAN_PENGGUNA', { email: email, nama: $('pgNama').value.trim(), role: $('pgRole').value });
+    overlay(false);
+    if (r.passwordSementara) {
+      await Swal.fire({
+        icon: 'success', title: 'Akaun dicipta',
+        html: 'Kata laluan sementara untuk <b></b>',
+        didOpen: () => {
+          const b = Swal.getHtmlContainer().querySelector('b');
+          b.textContent = email;
+          const kod = document.createElement('div');
+          kod.style.cssText = 'margin-top:14px;font-family:monospace;font-size:20px;font-weight:700;background:#f1f5f9;padding:12px;border-radius:8px;letter-spacing:1px';
+          kod.textContent = r.passwordSementara;
+          const nota = document.createElement('p');
+          nota.style.cssText = 'margin-top:10px;font-size:12px;color:#64748b';
+          nota.textContent = 'Salin sekarang — ia tidak akan dipaparkan lagi. Pengguna akan diminta tukar selepas log masuk pertama.';
+          Swal.getHtmlContainer().appendChild(kod);
+          Swal.getHtmlContainer().appendChild(nota);
+        }
+      });
+    } else { toast('success', r.mesej || 'Disimpan.'); }
+    $('pgEmail').value = ''; $('pgNama').value = '';
+    muatPengguna();
+  } catch (err) { overlay(false); ralat(err.message); }
+}
+
+async function tukarAktif(u) {
+  overlay(true, 'Mengemas kini...');
+  try {
+    await api('SIMPAN_PENGGUNA', { email: u.email, nama: u.nama, role: u.role, aktif: !u.aktif });
+    overlay(false); toast('success', 'Status dikemas kini.'); muatPengguna();
+  } catch (err) { overlay(false); ralat(err.message); }
+}
+
+async function resetPassword(email) {
+  const sah = await Swal.fire({
+    icon: 'warning', title: 'Reset kata laluan?', text: email,
+    showCancelButton: true, confirmButtonText: 'Ya, reset'
+  });
+  if (!sah.isConfirmed) return;
+  overlay(true, 'Mereset...');
+  try {
+    const r = await api('RESET_PASSWORD', { email: email });
+    overlay(false);
+    await Swal.fire({
+      icon: 'success', title: 'Kata laluan direset',
+      didOpen: () => {
+        const kod = document.createElement('div');
+        kod.style.cssText = 'font-family:monospace;font-size:20px;font-weight:700;background:#f1f5f9;padding:12px;border-radius:8px;letter-spacing:1px';
+        kod.textContent = r.passwordSementara;
+        Swal.getHtmlContainer().appendChild(kod);
+      }
+    });
+    muatPengguna();
+  } catch (err) { overlay(false); ralat(err.message); }
+}
+
+async function muatAudit() {
+  const tb = $('badanAudit'); tb.textContent = '';
+  tb.appendChild(barisKosong(6, 'Memuatkan...'));
+  try {
+    const r = await api('AUDIT', { had: 300 });
+    tb.textContent = '';
+    if (!r.log.length) { tb.appendChild(barisKosong(6, 'Log kosong.')); return; }
+    r.log.forEach(l => {
+      const tr = document.createElement('tr');
+      const d = new Date(l.masa);
+      tr.appendChild(e_('td', 'text-xs whitespace-nowrap', tarikhDMY(l.masa) + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2)));
+      tr.appendChild(e_('td', 'text-xs', l.email));
+      tr.appendChild(e_('td', 'text-xs font-semibold', l.action));
+      tr.appendChild(e_('td', 'text-xs truncate max-w-[220px]', l.sasaran));
+      const tdSt = e_('td', 'text-center');
+      const warna = l.status === 'BERJAYA' ? 'bg-emerald-100 text-emerald-700'
+                  : (l.status === 'GAGAL' || l.status === 'DITOLAK' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600');
+      tdSt.appendChild(e_('span', 'pil ' + warna, l.status));
+      tr.appendChild(tdSt);
+      tr.appendChild(e_('td', 'text-xs text-slate-500', l.nota));
+      tb.appendChild(tr);
+    });
+  } catch (err) { tb.textContent = ''; tb.appendChild(barisKosong(6, err.message)); }
+}
+
+async function jalankanPurge(mod) {
+  if (mod === 'LAKSANA') {
+    const sah = await Swal.fire({
+      icon: 'warning', title: 'Laksana pembersihan?',
+      text: 'Rekod melebihi tempoh simpan akan ditandakan padam dan failnya dibuang ke Trash Drive. Tindakan ini tidak boleh dibatalkan dari sistem.',
+      showCancelButton: true, confirmButtonColor: '#e11d48', confirmButtonText: 'Ya, teruskan'
+    });
+    if (!sah.isConfirmed) return;
+  }
+  overlay(true, 'Memproses...');
+  try {
+    const r = await api('PURGE_RETENTION', { mod: mod === 'PRALIHAT' ? 'PRALIHAT' : 'LAKSANA' });
+    overlay(false);
+    await Swal.fire({
+      icon: 'info',
+      title: mod === 'PRALIHAT' ? 'Pralihat' : 'Pembersihan selesai',
+      text: r.kiraan + ' rekod ' + (mod === 'PRALIHAT' ? 'akan' : 'telah') + ' terkesan (sebelum ' + tarikhDMY(r.hadTarikh) + ').'
+    });
+  } catch (err) { overlay(false); ralat(err.message); }
+}
+
+// ---------------------------------------------------------------- mula
+lukisSenaraiLampiran();
+mula();
+
+</script>
+</body>
+</html>
