@@ -33,6 +33,15 @@
 :root{
   --w1:#0f766e; --w2:#312e81; --aksen:#f59e0b;
 }
+/* Sandaran untuk Tailwind CDN. Jika CDN lambat atau disekat oleh rangkaian
+   sekolah, tanpa peraturan ini SEMUA skrin (log masuk, panel guru, panel
+   admin, modal) akan terpapar serentak. Tiada !important — supaya utiliti
+   responsif Tailwind masih menang bila CDN berjaya dimuatkan. */
+.hidden{display:none;}
+@media (min-width:640px){
+  .hidden.sm\:inline{display:inline;}
+  .hidden.sm\:block{display:block;}
+}
 body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
 .btn-utama{background:var(--w2);color:#fff;}
 .btn-utama:hover{filter:brightness(1.15);}
@@ -41,20 +50,58 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
 .grad-nav{background:linear-gradient(90deg,var(--w1),var(--w2));}
 .teks-w1{color:var(--w1);} .teks-w2{color:var(--w2);}
 
-/* --- Kertas A4 --- */
+/* --- Kertas A4 ---
+   Satu warna kertas sahaja (putih bersih). Kotak kandungan guna tint kelabu
+   yang sangat cerah supaya tiada blok warna yang nampak "terangkat". */
 .a4-page{
   width:100%;max-width:210mm;min-height:290mm;max-height:290mm;
-  overflow:hidden;padding:12mm;box-sizing:border-box;background:#fffbeb;
+  overflow:hidden;padding:12mm;box-sizing:border-box;background:#ffffff;
   margin:0 auto 16px;position:relative;box-shadow:0 10px 15px -3px rgba(0,0,0,.1);
   display:flex;flex-direction:column;justify-content:space-between;
 }
-.a4-page.lampiran{justify-content:flex-start;gap:10px;}
+.a4-page.lampiran{justify-content:flex-start;gap:8px;}
 .a4-page > *{margin-bottom:3mm;}
-.kotak{background:#fff;border-radius:8px;padding:8px 12px;
-  box-shadow:0 4px 6px -1px rgba(0,0,0,.05);border:1px solid rgba(0,0,0,.05);
-  border-left:5px solid var(--w1);}
+.kotak{background:#f8fafc;border-radius:8px;padding:8px 12px;
+  border:1px solid #e8edf3;border-left:4px solid var(--w1);}
 .kotak.rose{border-left-color:#e11d48;} .kotak.indigo{border-left-color:#4f46e5;}
 .kotak.amber{border-left-color:#d97706;} .kotak.emerald{border-left-color:#059669;}
+
+/* --- Susun atur dokumen A4 (tidak bergantung kepada Tailwind) --- */
+.pv-grid{display:grid;gap:6px;}
+.pv-2{grid-template-columns:repeat(2,minmax(0,1fr));}
+.pv-3{grid-template-columns:repeat(3,minmax(0,1fr));}
+.pv-4{grid-template-columns:repeat(4,minmax(0,1fr));}
+.pv-sela{margin-bottom:8px;}
+.pv-kepala{display:flex;align-items:center;gap:12px;
+  border-bottom:2px solid var(--w1);padding-bottom:10px;margin-bottom:12px;}
+.pv-kepala-teks{flex:1;text-align:center;}
+.pv-logo{height:56px;width:56px;object-fit:contain;flex:0 0 auto;}
+.pv-sekolah{font-size:1.1rem;font-weight:700;color:var(--w2);line-height:1.25;}
+.pv-alamat{font-size:10px;color:#64748b;}
+.pv-sistem{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--w1);margin-top:3px;}
+.pv-besar{font-size:1rem;font-weight:700;}
+.pv-kecil{font-size:.78rem;}
+.pv-tebal{font-weight:700;}
+.pv-kaki{border-top:1px solid #e2e8f0;padding-top:10px;}
+.pv-tandatangan{gap:24px;margin-bottom:10px;}
+.pv-garis{border-bottom:1px solid #cbd5e1;margin-top:22px;}
+.pv-nota{font-size:9px;color:#94a3b8;margin-top:3px;}
+.pv-baris-kaki{display:flex;justify-content:space-between;font-size:9px;color:#94a3b8;}
+.pv-lajur{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;}
+.pv-kepala-gambar{text-align:center;border-bottom:2px solid var(--w1);
+  padding-bottom:8px;margin-bottom:10px;flex:0 0 auto;}
+.pv-tajuk-lampiran{font-size:.82rem;font-weight:700;letter-spacing:.08em;color:var(--w2);}
+.pv-isi{flex:1 1 auto;min-height:0;gap:9px;}
+.pv-kaki-kanan{text-align:right;font-size:9px;color:#94a3b8;
+  border-top:1px solid #e2e8f0;padding-top:8px;flex:0 0 auto;}
+
+/* Kad gambar — imej memenuhi kad sepenuhnya, kapsyen melekat pada imej.
+   Tiada jurang putih di bawah imej. */
+.kad-gambar{background:#f8fafc;border:1px solid #e8edf3;border-radius:8px;
+  overflow:hidden;display:flex;flex-direction:column;}
+.kad-gambar img{width:100%;height:100%;object-fit:cover;display:block;flex:1 1 auto;min-height:0;}
+.kad-gambar figcaption{font-size:9.5px;line-height:1.3;padding:5px 7px;color:#475569;
+  background:#eef2f7;border-top:1px solid #e2e8f0;text-align:center;flex:0 0 auto;}
 .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b;font-weight:700;margin-bottom:3px;}
 .val{color:#0f172a;font-weight:500;font-size:.92rem;line-height:1.4;white-space:pre-wrap;word-break:break-word;}
 
@@ -89,6 +136,34 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
   <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center min-w-[260px]">
     <div class="animate-spin rounded-full h-11 w-11 border-b-2 border-slate-800 mb-4"></div>
     <h2 id="overlayTeks" class="text-base font-bold text-slate-800">Sedang memproses...</h2>
+  </div>
+</div>
+
+<!-- ============ MODAL PRATONTON PDF ============ -->
+<div id="modalPdf" class="hidden fixed inset-0 z-[9998] bg-slate-900/80 p-3 sm:p-8">
+  <div class="bg-white rounded-2xl w-full max-w-5xl mx-auto h-full flex flex-col overflow-hidden shadow-2xl">
+    <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-slate-200">
+      <div class="min-w-0">
+        <h3 id="modalPdfNama" class="text-sm font-bold truncate">Pratonton Laporan</h3>
+        <p id="modalPdfInfo" class="text-[11px] text-slate-400 truncate"></p>
+      </div>
+      <div class="flex gap-2 shrink-0">
+        <button id="btnMuatTurunPdf" class="btn-utama px-3 sm:px-4 py-2 rounded-lg text-xs font-bold">
+          <i class="fas fa-download sm:mr-1.5"></i><span class="hidden sm:inline">Muat Turun</span>
+        </button>
+        <button onclick="tutupModalPdf()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg text-xs font-bold">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+    <div class="flex-1 bg-slate-100 relative">
+      <iframe id="bingkaiPdf" class="w-full h-full border-0" title="Pratonton PDF"></iframe>
+      <div id="pdfTakBoleh" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+        <i class="fas fa-file-pdf text-4xl text-slate-300 mb-3"></i>
+        <p class="text-sm text-slate-500 max-w-sm">Pelayar ini tidak dapat memaparkan PDF di dalam halaman.
+        Tekan <b>Muat Turun</b> untuk membuka fail.</p>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -267,76 +342,80 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
           <h2 class="text-base font-bold"><i class="fas fa-file-lines mr-2 teks-w2"></i>Pratonton Laporan</h2>
           <span class="text-xs text-slate-400">Format A4 &middot; inilah yang akan dijana sebagai PDF</span>
         </div>
+        <!-- Bahagian ini SENGAJA tidak guna kelas Tailwind. Semua susun atur
+             datang dari <style> dalam fail ini, supaya PDF yang dijana kekal
+             betul walaupun CDN Tailwind disekat oleh rangkaian sekolah. -->
         <div id="pdfContent">
           <!-- HALAMAN 1 -->
           <div class="a4-page" id="pageOne">
             <div>
-              <div class="flex items-center gap-3 border-b-2 pb-3 mb-4" style="border-color:var(--w1)">
-                <img id="pvLogo1" class="h-14 w-14 object-contain hidden" alt="">
-                <div class="flex-1 text-center">
-                  <h1 id="pvSekolah" class="text-lg font-bold" style="color:var(--w2)"></h1>
-                  <p id="pvAlamat" class="text-[10px] text-slate-500"></p>
-                  <p id="pvTajukSistem" class="text-[11px] font-bold mt-1 tracking-wider" style="color:var(--w1)"></p>
+              <div class="pv-kepala">
+                <img id="pvLogo1" class="pv-logo hidden" alt="">
+                <div class="pv-kepala-teks">
+                  <h1 id="pvSekolah" class="pv-sekolah"></h1>
+                  <p id="pvAlamat" class="pv-alamat"></p>
+                  <p id="pvTajukSistem" class="pv-sistem"></p>
                 </div>
-                <img id="pvLogo2" class="h-14 w-14 object-contain hidden" alt="">
+                <img id="pvLogo2" class="pv-logo hidden" alt="">
               </div>
 
-              <div class="kotak mb-3">
+              <div class="kotak pv-sela">
                 <div class="lbl">Nama Program / Pertandingan</div>
-                <div class="val text-base font-bold" id="pvTajuk">-</div>
+                <div class="val pv-besar" id="pvTajuk">-</div>
               </div>
 
-              <div class="grid grid-cols-3 gap-2 mb-3">
-                <div class="kotak indigo"><div class="lbl">Unit Kokurikulum</div><div class="val text-xs" id="pvUnit">-</div></div>
-                <div class="kotak indigo"><div class="lbl">Anjuran</div><div class="val text-xs" id="pvAnjuran">-</div></div>
-                <div class="kotak indigo"><div class="lbl">Peringkat</div><div class="val text-xs" id="pvPeringkat">-</div></div>
+              <div class="pv-grid pv-3 pv-sela">
+                <div class="kotak indigo"><div class="lbl">Unit Kokurikulum</div><div class="val pv-kecil" id="pvUnit">-</div></div>
+                <div class="kotak indigo"><div class="lbl">Anjuran</div><div class="val pv-kecil" id="pvAnjuran">-</div></div>
+                <div class="kotak indigo"><div class="lbl">Peringkat</div><div class="val pv-kecil" id="pvPeringkat">-</div></div>
               </div>
 
-              <div class="grid grid-cols-4 gap-2 mb-3">
-                <div class="kotak emerald"><div class="lbl">Tarikh</div><div class="val text-xs" id="pvTarikh">-</div></div>
-                <div class="kotak emerald"><div class="lbl">Murid Lelaki</div><div class="val text-xs" id="pvLelaki">0</div></div>
-                <div class="kotak emerald"><div class="lbl">Murid Perempuan</div><div class="val text-xs" id="pvPerempuan">0</div></div>
-                <div class="kotak emerald"><div class="lbl">Jumlah</div><div class="val text-xs font-bold" id="pvJumlah">0</div></div>
+              <div class="pv-grid pv-4 pv-sela">
+                <div class="kotak emerald"><div class="lbl">Tarikh</div><div class="val pv-kecil" id="pvTarikh">-</div></div>
+                <div class="kotak emerald"><div class="lbl">Murid Lelaki</div><div class="val pv-kecil" id="pvLelaki">0</div></div>
+                <div class="kotak emerald"><div class="lbl">Murid Perempuan</div><div class="val pv-kecil" id="pvPerempuan">0</div></div>
+                <div class="kotak emerald"><div class="lbl">Jumlah</div><div class="val pv-kecil pv-tebal" id="pvJumlah">0</div></div>
               </div>
 
-              <div class="kotak mb-3"><div class="lbl">Objektif</div><div class="val" id="pvObjektif">-</div></div>
-              <div class="kotak rose mb-3"><div class="lbl">Kaedah Pelaksanaan</div><div class="val" id="pvKaedah">-</div></div>
-              <div class="kotak emerald mb-3"><div class="lbl">Penambahbaikan</div><div class="val" id="pvImprove">-</div></div>
-              <div class="kotak amber mb-3"><div class="lbl">Rumusan</div><div class="val" id="pvRumusan">-</div></div>
+              <div class="kotak pv-sela"><div class="lbl">Objektif</div><div class="val" id="pvObjektif">-</div></div>
+              <div class="kotak rose pv-sela"><div class="lbl">Kaedah Pelaksanaan</div><div class="val" id="pvKaedah">-</div></div>
+              <div class="kotak emerald pv-sela"><div class="lbl">Penambahbaikan</div><div class="val" id="pvImprove">-</div></div>
+              <div class="kotak amber pv-sela"><div class="lbl">Rumusan</div><div class="val" id="pvRumusan">-</div></div>
             </div>
 
-            <div class="border-t pt-3">
-              <div class="grid grid-cols-2 gap-6 mb-3">
+            <div class="pv-kaki">
+              <div class="pv-grid pv-2 pv-tandatangan">
                 <div>
-                  <div class="lbl mb-0">Disediakan Oleh</div>
-                  <div class="val text-xs font-semibold" id="pvNama">-</div>
-                  <div class="border-b border-slate-300 mt-6"></div>
-                  <div class="text-[9px] text-slate-400 mt-1">Tandatangan &amp; Tarikh</div>
+                  <div class="lbl">Disediakan Oleh</div>
+                  <div class="val pv-kecil pv-tebal" id="pvNama">-</div>
+                  <div class="pv-garis"></div>
+                  <div class="pv-nota">Tandatangan &amp; Tarikh</div>
                 </div>
                 <div>
-                  <div class="lbl mb-0">Disemak Oleh</div>
-                  <div class="val text-xs font-semibold" id="pvPenyemak">-</div>
-                  <div class="border-b border-slate-300 mt-6"></div>
-                  <div class="text-[9px] text-slate-400 mt-1">Tandatangan &amp; Tarikh</div>
+                  <div class="lbl">Disemak Oleh</div>
+                  <div class="val pv-kecil pv-tebal" id="pvPenyemak">-</div>
+                  <div class="pv-garis"></div>
+                  <div class="pv-nota">Tandatangan &amp; Tarikh</div>
                 </div>
               </div>
-              <div class="flex justify-between text-[9px] text-slate-400">
+              <div class="pv-baris-kaki">
                 <div id="pvFooter"></div>
                 <div id="pvTarikhCetak"></div>
               </div>
             </div>
           </div>
 
-          <!-- HALAMAN 2: GAMBAR -->
+          <!-- HALAMAN 2: GAMBAR (disembunyikan sepenuhnya jika tiada gambar) -->
           <div class="a4-page" id="pageTwo">
-            <div>
-              <div class="text-center border-b-2 pb-2 mb-4" style="border-color:var(--w1)">
-                <h2 class="text-sm font-bold tracking-wider" style="color:var(--w2)">LAMPIRAN GAMBAR AKTIVITI</h2>
-                <p id="pvTajuk2" class="text-[10px] text-slate-500"></p>
+            <div class="pv-lajur">
+              <div class="pv-kepala-gambar">
+                <h2 class="pv-tajuk-lampiran">LAMPIRAN GAMBAR AKTIVITI</h2>
+                <p id="pvTajuk2" class="pv-alamat"></p>
               </div>
-              <div id="pvGridGambar" class="grid grid-cols-2 gap-3"></div>
+              <!-- grid mengisi tinggi baki halaman supaya tiada ruang putih tergantung -->
+              <div id="pvGridGambar" class="pv-grid pv-isi"></div>
             </div>
-            <div class="text-right text-[10px] text-slate-400 border-t pt-2" id="pvFooter2"></div>
+            <div class="pv-kaki-kanan" id="pvFooter2"></div>
           </div>
 
           <!-- HALAMAN 3+: PDF DILAMPIR -->
@@ -423,6 +502,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
               <input type="file" id="failLogo1" accept="image/png,image/jpeg,image/webp" class="text-xs flex-1">
               <button onclick="muatNaikLogo(1)" class="btn-utama px-3 py-2 rounded text-xs font-bold">Naik</button>
             </div>
+            <p id="pautanLogo1" class="text-[10px] text-slate-400 mt-1.5"></p>
           </div>
           <div>
             <label class="lbl">Logo 2 (pilihan)</label>
@@ -431,9 +511,15 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
               <input type="file" id="failLogo2" accept="image/png,image/jpeg,image/webp" class="text-xs flex-1">
               <button onclick="muatNaikLogo(2)" class="btn-utama px-3 py-2 rounded text-xs font-bold">Naik</button>
             </div>
+            <p id="pautanLogo2" class="text-[10px] text-slate-400 mt-1.5"></p>
           </div>
         </div>
-        <p class="text-[11px] text-slate-400">Logo dikecilkan automatik dalam pelayar sebelum dimuat naik (maks 400px, 400KB).</p>
+        <p class="text-[11px] text-slate-400 leading-relaxed">
+          Logo dikecilkan automatik dalam pelayar (maks 400px, 400KB) sebelum disimpan ke dalam
+          subfolder <b>Aset</b> di dalam folder Drive sistem yang sama dengan fail PDF laporan.
+          ID failnya disimpan dalam tab <b>Config</b>, dan sistem menyuap imej itu terus ke dalam
+          PDF — jadi logo sentiasa muncul tanpa isu CORS.
+        </p>
         <button onclick="simpanTetapan()" class="btn-utama px-6 py-2.5 rounded-lg text-sm font-bold"><i class="fas fa-floppy-disk mr-2"></i>Simpan Tetapan</button>
       </div>
 
@@ -520,11 +606,23 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
    ===================================================================== */
 
 /* >>> ISI URL WEB APP ANDA DI SINI (berakhir dengan /exec) <<< */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4phu2DNT9iDj1HxhCu3TW8pjbECGOCkzNgo4f9h466NwxBtEgVTNUI0DwtGuDvKit/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPrRism8f40d1N-WPGEVV9_suQ_xo2FitSpjEYAxuxgjAlg1UZ1ZWv4Pobi4T-UFBy/exec";
 
 // ---------------------------------------------------------------- state
-let URL_API   = SCRIPT_URL || sessionStorage.getItem('opr_url') || localStorage.getItem('opr_url') || '';
-let TOKEN     = sessionStorage.getItem('opr_token') || '';
+/* Akses storan pelayar dibungkus try/catch. Dalam mod privasi ketat, iframe
+   sandbox atau sesetengah pelayar sekolah, membaca storage boleh melontar
+   ralat — tanpa bungkusan ini keseluruhan skrip akan mati pada baris pertama. */
+function simpanan(jenis, kunci, nilai) {
+  try {
+    const s = jenis === 'sesi' ? window.sessionStorage : window.localStorage;
+    if (nilai === undefined) return s.getItem(kunci);
+    if (nilai === null) { s.removeItem(kunci); return null; }
+    s.setItem(kunci, nilai); return nilai;
+  } catch (e) { return null; }
+}
+
+let URL_API   = SCRIPT_URL || simpanan('sesi', 'opr_url') || simpanan('kekal', 'opr_url') || '';
+let TOKEN     = simpanan('sesi', 'opr_token') || '';
 let SESI      = null;
 let CFG       = {};
 let SENARAI   = {};
@@ -647,7 +745,7 @@ function simpanSetupUrl() {
   if (!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(v)) {
     return ralat('URL tidak sah. Ia mesti bermula https://script.google.com/macros/s/ dan berakhir /exec');
   }
-  localStorage.setItem('opr_url', v);
+  simpanan('kekal', 'opr_url', v);
   URL_API = v;
   location.reload();
 }
@@ -668,7 +766,7 @@ async function mula() {
       const r = await api('SAYA');
       SESI = r.sesi;
       return masukApp();
-    } catch (err) { TOKEN = ''; sessionStorage.removeItem('opr_token'); }
+    } catch (err) { TOKEN = ''; simpanan('sesi', 'opr_token', null); }
   }
   tunjuk('skrinSetup', false);
   tunjuk('skrinLogin', true);
@@ -708,7 +806,7 @@ $('formLogin').addEventListener('submit', async (ev) => {
       password: $('loginPassword').value
     });
     TOKEN = r.token;
-    sessionStorage.setItem('opr_token', TOKEN);
+    simpanan('sesi', 'opr_token', TOKEN);
     SESI = { email: r.pengguna.email, nama: r.pengguna.nama, role: r.pengguna.role };
     $('loginPassword').value = '';
     overlay(false);
@@ -737,7 +835,7 @@ async function logKeluar() {
 
 function paksaLogKeluar() {
   TOKEN = ''; SESI = null;
-  sessionStorage.removeItem('opr_token');
+  simpanan('sesi', 'opr_token', null);
   location.reload();
 }
 
@@ -892,17 +990,38 @@ function lukisPratonton() {
   $('pvFooter2').textContent = footer;
   $('pvTarikhCetak').textContent = 'Dijana: ' + tarikhDMY(new Date());
 
-  const grid = $('pvGridGambar'); grid.textContent = '';
-  if (!imejBukti.length) {
-    grid.appendChild(e_('p', 'col-span-2 text-center text-xs text-slate-400 italic py-10', 'Tiada gambar dilampirkan.'));
-  }
-  imejBukti.forEach(img => {
-    const kotak = e_('div', 'border border-slate-200 rounded-lg overflow-hidden bg-white');
+  lukisGridGambar();
+}
+
+/**
+ * Halaman gambar disembunyikan sepenuhnya jika tiada gambar — supaya tiada
+ * muka surat kosong dalam PDF. Bilangan lajur dan baris dikira ikut jumlah
+ * gambar supaya grid mengisi habis tinggi halaman, tiada ruang putih di bawah.
+ */
+function lukisGridGambar() {
+  const bil = imejBukti.length;
+  $('pageTwo').style.display = bil ? '' : 'none';
+  if (!bil) return;
+
+  const grid = $('pvGridGambar');
+  grid.textContent = '';
+
+  const lajur = bil === 1 ? 1 : (bil <= 6 ? 2 : 3);
+  const baris = Math.ceil(bil / lajur);
+  grid.style.gridTemplateColumns = 'repeat(' + lajur + ', minmax(0, 1fr))';
+  grid.style.gridTemplateRows = 'repeat(' + baris + ', minmax(0, 1fr))';
+
+  const baki = bil % lajur;   // gambar terakhir pada baris yang tidak penuh
+  imejBukti.forEach((img, i) => {
+    const kad = e_('figure', 'kad-gambar');
+    // Regangkan gambar terakhir supaya tiada sel kosong di hujung grid
+    if (baki !== 0 && i >= bil - baki) kad.style.gridColumn = 'span ' + (lajur - baki + 1);
     const im = document.createElement('img');
-    im.src = img.dataUrl; im.className = 'w-full h-40 object-cover'; im.alt = '';
-    kotak.appendChild(im);
-    kotak.appendChild(e_('p', 'text-[10px] p-2 text-slate-600 text-center', img.keterangan || img.nama));
-    grid.appendChild(kotak);
+    im.src = img.dataUrl; im.alt = '';
+    kad.appendChild(im);
+    const teks = (img.keterangan || '').trim();
+    if (teks) kad.appendChild(e_('figcaption', '', teks));   // tiada kapsyen = tiada jalur putih
+    grid.appendChild(kad);
   });
 }
 
@@ -1017,10 +1136,82 @@ function lukisSenaraiLampiran() {
 }
 
 // ---------------------------------------------------------------- hantar
+/**
+ * Medan yang disemak sebelum hantar. Tiada satu pun yang menyekat penghantaran —
+ * guru hanya diberi peringatan supaya mereka sedar apa yang tertinggal.
+ */
+const SEMAKAN_LENGKAP = [
+  { id: 'fUnit',      label: 'Unit Kokurikulum' },
+  { id: 'fAnjuran',   label: 'Anjuran' },
+  { id: 'fPeringkat', label: 'Peringkat Pelibatan' },
+  { id: 'fTarikh',    label: 'Tarikh Pelaksanaan' },
+  { id: 'fObjektif',  label: 'Objektif' },
+  { id: 'fKaedah',    label: 'Kaedah Pelaksanaan' },
+  { id: 'fImprove',   label: 'Penambahbaikan' },
+  { id: 'fRumusan',   label: 'Rumusan' },
+  { id: 'fNama',      label: 'Disediakan Oleh' }
+];
+
+function medanKosong() {
+  const senarai = SEMAKAN_LENGKAP
+    .filter(m => !String($(m.id).value || '').trim())
+    .map(m => m.label);
+  const l = Number($('fLelaki').value) || 0;
+  const p = Number($('fPerempuan').value) || 0;
+  if (l + p === 0) senarai.push('Bilangan pelibatan murid');
+  if (!imejBukti.length) senarai.push('Gambar aktiviti');
+  return senarai;
+}
+
+/** Peringatan sebelum hantar. Guru boleh teruskan atau kembali mengisi. */
+async function sahkanSebelumHantar(status) {
+  const kosong = medanKosong();
+  if (!kosong.length) return true;
+
+  const nama = kosong.length === 1
+    ? kosong[0]
+    : kosong.slice(0, -1).join(', ') + ' dan ' + kosong[kosong.length - 1];
+
+  const jawapan = await Swal.fire({
+    icon: 'question',
+    title: 'Ada bahagian yang belum diisi',
+    html: '<div style="text-align:left;font-size:14px;line-height:1.6"></div>',
+    didOpen: () => {
+      const kotak = Swal.getHtmlContainer().querySelector('div');
+      const p1 = document.createElement('p');
+      p1.textContent = kosong.length === 1
+        ? 'Bahagian ' + nama + ' masih kosong.'
+        : kosong.length + ' bahagian masih kosong:';
+      kotak.appendChild(p1);
+
+      if (kosong.length > 1) {
+        const ul = document.createElement('ul');
+        ul.style.cssText = 'margin:10px 0 0 18px;color:#334155';
+        kosong.forEach(k => { const li = document.createElement('li'); li.textContent = k; ul.appendChild(li); });
+        kotak.appendChild(ul);
+      }
+
+      const p2 = document.createElement('p');
+      p2.style.cssText = 'margin-top:14px;color:#64748b;font-size:13px';
+      p2.textContent = status === 'HANTAR'
+        ? 'Laporan yang tidak lengkap mungkin dikembalikan oleh pihak pentadbir untuk dilengkapkan semula. Anda pasti mahu hantar sekarang?'
+        : 'Draf boleh disimpan seperti ini dan dilengkapkan kemudian. Teruskan simpan?';
+      kotak.appendChild(p2);
+    },
+    showCancelButton: true,
+    cancelButtonText: 'Kembali isi dahulu',
+    confirmButtonText: status === 'HANTAR' ? 'Ya, hantar juga' : 'Ya, simpan draf',
+    confirmButtonColor: '#475569',
+    reverseButtons: true
+  });
+  return jawapan.isConfirmed === true;
+}
+
 async function hantarLaporan(status) {
+  // Dua sahaja yang benar-benar wajib: tajuk (untuk nama fail) dan persetujuan PDPA.
   if (!$('fTajuk').value.trim()) return ralat('Sila isi nama program / pertandingan.');
-  if (!$('fUnit').value) return ralat('Sila pilih unit kokurikulum.');
   if (!$('fId').value && !$('fConsent').checked) return ralat('Sila tanda kotak persetujuan notis PDPA.');
+  if (!(await sahkanSebelumHantar(status))) return;
 
   overlay(true, 'Menjana PDF...');
   try {
@@ -1136,21 +1327,54 @@ function barisKosong(bil, teks) {
   td.colSpan = bil; tr.appendChild(td); return tr;
 }
 
+// ------------------------------------------------- pratonton PDF (modal)
+let urlPdfSemasa = '';
+
+/** Buka PDF dalam modal pratonton. Muat turun hanya bila pengguna tekan butang. */
 async function bukaPdf(id) {
   overlay(true, 'Membuka fail...');
   try {
     const rec = await api('BACA_LAPORAN', { id: id });
     if (!rec.data.pdfFileId) { overlay(false); return toast('warning', 'Tiada PDF untuk rekod ini.'); }
+
     const f = await api('AMBIL_FAIL', { id: id, fileId: rec.data.pdfFileId });
     const bytes = Uint8Array.from(atob(f.base64), c => c.charCodeAt(0));
-    const url = URL.createObjectURL(new Blob([bytes], { type: f.mimeType }));
+
+    if (urlPdfSemasa) URL.revokeObjectURL(urlPdfSemasa);
+    urlPdfSemasa = URL.createObjectURL(new Blob([bytes], { type: f.mimeType || 'application/pdf' }));
+
+    $('modalPdfNama').textContent = f.nama || 'Laporan.pdf';
+    $('modalPdfInfo').textContent = (rec.data.tajuk || '') + ' · ' + Math.round(bytes.length / 1024) + ' KB';
+    $('pdfTakBoleh').classList.add('hidden');
+    $('bingkaiPdf').src = urlPdfSemasa;
+
+    const btn = $('btnMuatTurunPdf');
+    btn.onclick = () => {
+      const a = document.createElement('a');
+      a.href = urlPdfSemasa; a.download = f.nama || 'laporan.pdf';
+      document.body.appendChild(a); a.click(); a.remove();
+    };
+
+    $('modalPdf').classList.remove('hidden');
     overlay(false);
-    const a = document.createElement('a');
-    a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.download = f.nama;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
+
+    // Sesetengah pelayar mudah alih tidak memaparkan PDF dalam iframe.
+    setTimeout(() => {
+      const bingkai = $('bingkaiPdf');
+      if (!bingkai.clientHeight) $('pdfTakBoleh').classList.remove('hidden');
+    }, 1500);
   } catch (err) { overlay(false); ralat(err.message); }
 }
+
+function tutupModalPdf() {
+  $('modalPdf').classList.add('hidden');
+  $('bingkaiPdf').src = 'about:blank';
+  if (urlPdfSemasa) { URL.revokeObjectURL(urlPdfSemasa); urlPdfSemasa = ''; }
+}
+
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape' && !$('modalPdf').classList.contains('hidden')) tutupModalPdf();
+});
 
 async function editLaporan(id) {
   overlay(true, 'Memuatkan rekod...');
@@ -1291,6 +1515,8 @@ async function muatTetapan() {
      'PDF_AKSES', 'FOLDER_ID'].forEach(k => { const n = $('c' + k); if (n) n.value = c[k] || ''; });
     $('pratontonLogo1').src = CFG.logo1 || '';
     $('pratontonLogo2').src = CFG.logo2 || '';
+    tunjukPautanLogo(1, c.LOGO1_ID, '');
+    tunjukPautanLogo(2, c.LOGO2_ID, '');
   } catch (err) { ralat(err.message); }
 }
 
@@ -1320,15 +1546,33 @@ async function muatNaikLogo(slot) {
   baca.onload = async (ev) => {
     try {
       const kecil = await kecilkanImej(ev.target.result, 400, 0.9);
-      await api('MUAT_NAIK_LOGO', { slot: String(slot), base64: kecil.split(',')[1], mimeType: 'image/jpeg' });
+      const hasil = await api('MUAT_NAIK_LOGO', { slot: String(slot), base64: kecil.split(',')[1], mimeType: 'image/jpeg' });
       const baru = await api('CONFIG_AWAM');
-      CFG = baru; pakaiTema(baru);
+      CFG = baru; pakaiTema(baru); lukisPratonton();
       $('pratontonLogo' + slot).src = slot === 1 ? baru.logo1 : baru.logo2;
+      tunjukPautanLogo(slot, hasil.fileId, hasil.pautanDrive);
       inp.value = '';
-      overlay(false); toast('success', 'Logo dikemas kini.');
+      overlay(false); toast('success', 'Logo disimpan dalam Drive dan terus dipakai dalam PDF.');
     } catch (err) { overlay(false); ralat(err.message); }
   };
   baca.readAsDataURL(fail);
+}
+
+/** Papar lokasi sebenar logo dalam Drive supaya admin tahu ia disimpan di mana. */
+function tunjukPautanLogo(slot, fileId, pautan) {
+  const n = $('pautanLogo' + slot);
+  if (!n) return;
+  n.textContent = '';
+  if (!fileId) return;
+  n.appendChild(document.createTextNode('Disimpan dalam Drive · '));
+  const a = document.createElement('a');
+  a.href = pautan || ('https://drive.google.com/file/d/' + fileId + '/view');
+  a.target = '_blank'; a.rel = 'noopener noreferrer';
+  a.className = 'underline';
+  a.textContent = 'buka fail';
+  n.appendChild(a);
+  const kod = e_('span', 'block text-slate-300 truncate', 'ID: ' + fileId);
+  n.appendChild(kod);
 }
 
 function lukisEditorSenarai() {
