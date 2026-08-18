@@ -51,59 +51,84 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
 .teks-w1{color:var(--w1);} .teks-w2{color:var(--w2);}
 
 /* --- Kertas A4 ---
-   Satu warna kertas sahaja (putih bersih). Kotak kandungan guna tint kelabu
-   yang sangat cerah supaya tiada blok warna yang nampak "terangkat". */
+   Kertas krim, kotak kandungan putih. Ini rupa asal yang lebih kemas.
+
+   Nota: seluruh #pdfContent tidak bergantung pada Tailwind. Reset margin di
+   bawah menggantikan "preflight" Tailwind supaya jarak antara baris kekal
+   betul walaupun CDN disekat rangkaian sekolah. */
+#pdfContent h1, #pdfContent h2, #pdfContent h3,
+#pdfContent p, #pdfContent figure, #pdfContent figcaption{margin:0;padding:0;}
+
+.lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;
+  color:#64748b;font-weight:700;margin-bottom:3px;line-height:1.2;}
+.val{color:#0f172a;font-weight:500;font-size:.9rem;line-height:1.4;
+  white-space:pre-wrap;word-break:break-word;}
+
 .a4-page{
   width:100%;max-width:210mm;min-height:290mm;max-height:290mm;
-  overflow:hidden;padding:12mm;box-sizing:border-box;background:#ffffff;
+  overflow:hidden;padding:12mm;box-sizing:border-box;background:#fffbeb;
   margin:0 auto 16px;position:relative;box-shadow:0 10px 15px -3px rgba(0,0,0,.1);
   display:flex;flex-direction:column;justify-content:space-between;
 }
 .a4-page.lampiran{justify-content:flex-start;gap:8px;}
 .a4-page > *{margin-bottom:3mm;}
-.kotak{background:#f8fafc;border-radius:8px;padding:8px 12px;
-  border:1px solid #e8edf3;border-left:4px solid var(--w1);}
+.kotak{background:#fff;border-radius:8px;padding:8px 12px;
+  box-shadow:0 4px 6px -1px rgba(0,0,0,.05);
+  border:1px solid rgba(0,0,0,.05);border-left:5px solid var(--w1);}
 .kotak.rose{border-left-color:#e11d48;} .kotak.indigo{border-left-color:#4f46e5;}
 .kotak.amber{border-left-color:#d97706;} .kotak.emerald{border-left-color:#059669;}
 
-/* --- Susun atur dokumen A4 (tidak bergantung kepada Tailwind) --- */
+/* --- KEPALA PENUH: muka 1 sahaja ---
+   Logo bersebelahan di kiri, blok teks di kanan (rata kiri). */
+.pv-kepala{display:flex;align-items:center;gap:16px;
+  border-bottom:2px solid var(--w2);padding-bottom:12px;margin-bottom:12px;}
+.pv-logo-set{display:flex;align-items:center;gap:10px;flex:0 0 auto;}
+.pv-logo{height:76px;width:auto;max-width:86px;object-fit:contain;}
+.pv-kepala-teks{flex:1;min-width:0;text-align:left;}
+.pv-tajuk-dok{font-size:1.7rem;font-weight:700;color:#0f172a;line-height:1.05;}
+.pv-sekolah{font-size:.8rem;font-weight:700;text-transform:uppercase;
+  color:var(--w2);line-height:1.25;margin-top:6px;}
+.pv-alamat{font-size:.7rem;font-weight:600;color:var(--w2);line-height:1.35;}
+.pv-moto{font-size:.68rem;font-style:italic;color:var(--w1);margin-top:3px;}
+
+/* --- KEPALA RINGKAS: muka gambar & lampiran ---
+   Tajuk besar di kiri, logo kecil bersebelahan di kanan. */
+.pv-kepala-ringkas{display:flex;align-items:flex-end;justify-content:space-between;
+  gap:14px;padding-bottom:10px;margin-bottom:12px;flex:0 0 auto;
+  border-bottom:2px solid var(--aksen);}
+.pv-kepala-ringkas.merah{border-bottom-color:#e11d48;}
+.pv-tajuk-muka{font-size:1.5rem;font-weight:700;color:#0f172a;
+  text-transform:uppercase;line-height:1.05;}
+.pv-sub-muka{font-size:.72rem;font-weight:700;color:#e11d48;margin-top:2px;}
+.pv-logo-kecil{height:52px;width:auto;max-width:60px;object-fit:contain;}
+
+/* --- Bahagian lain dokumen --- */
 .pv-grid{display:grid;gap:6px;}
 .pv-2{grid-template-columns:repeat(2,minmax(0,1fr));}
 .pv-3{grid-template-columns:repeat(3,minmax(0,1fr));}
 .pv-4{grid-template-columns:repeat(4,minmax(0,1fr));}
 .pv-sela{margin-bottom:8px;}
-.pv-kepala{display:flex;align-items:center;gap:12px;
-  border-bottom:2px solid var(--w1);padding-bottom:10px;margin-bottom:12px;}
-.pv-kepala-teks{flex:1;text-align:center;}
-.pv-logo{height:56px;width:56px;object-fit:contain;flex:0 0 auto;}
-.pv-sekolah{font-size:1.1rem;font-weight:700;color:var(--w2);line-height:1.25;}
-.pv-alamat{font-size:10px;color:#64748b;}
-.pv-sistem{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--w1);margin-top:3px;}
 .pv-besar{font-size:1rem;font-weight:700;}
 .pv-kecil{font-size:.78rem;}
 .pv-tebal{font-weight:700;}
-.pv-kaki{border-top:1px solid #e2e8f0;padding-top:10px;}
+.pv-kaki{border-top:2px solid #cbd5e1;padding-top:10px;}
 .pv-tandatangan{gap:24px;margin-bottom:10px;}
-.pv-garis{border-bottom:1px solid #cbd5e1;margin-top:22px;}
-.pv-nota{font-size:9px;color:#94a3b8;margin-top:3px;}
-.pv-baris-kaki{display:flex;justify-content:space-between;font-size:9px;color:#94a3b8;}
+.pv-garis{border-bottom:1px solid #94a3b8;margin-top:22px;}
+.pv-nota{font-size:9px;color:#64748b;margin-top:3px;}
+.pv-baris-kaki{display:flex;justify-content:space-between;font-size:9.5px;color:#64748b;}
 .pv-lajur{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;}
-.pv-kepala-gambar{text-align:center;border-bottom:2px solid var(--w1);
-  padding-bottom:8px;margin-bottom:10px;flex:0 0 auto;}
-.pv-tajuk-lampiran{font-size:.82rem;font-weight:700;letter-spacing:.08em;color:var(--w2);}
 .pv-isi{flex:1 1 auto;min-height:0;gap:9px;}
-.pv-kaki-kanan{text-align:right;font-size:9px;color:#94a3b8;
-  border-top:1px solid #e2e8f0;padding-top:8px;flex:0 0 auto;}
+.pv-kaki-muka{display:flex;justify-content:space-between;align-items:flex-end;
+  border-top:2px solid #cbd5e1;padding-top:10px;flex:0 0 auto;font-size:9.5px;color:#64748b;}
 
 /* Kad gambar — imej memenuhi kad sepenuhnya, kapsyen melekat pada imej.
    Tiada jurang putih di bawah imej. */
-.kad-gambar{background:#f8fafc;border:1px solid #e8edf3;border-radius:8px;
-  overflow:hidden;display:flex;flex-direction:column;}
+.kad-gambar{background:#fff;border:1px solid #e8edf3;border-radius:8px;
+  overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 4px 6px -1px rgba(0,0,0,.05);}
 .kad-gambar img{width:100%;height:100%;object-fit:cover;display:block;flex:1 1 auto;min-height:0;}
-.kad-gambar figcaption{font-size:9.5px;line-height:1.3;padding:5px 7px;color:#475569;
-  background:#eef2f7;border-top:1px solid #e2e8f0;text-align:center;flex:0 0 auto;}
-.lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b;font-weight:700;margin-bottom:3px;}
-.val{color:#0f172a;font-weight:500;font-size:.92rem;line-height:1.4;white-space:pre-wrap;word-break:break-word;}
+.kad-gambar figcaption{font-size:9.5px;line-height:1.3;padding:5px 7px;color:#78350f;
+  background:#fffbeb;border-top:1px solid #fde68a;text-align:center;flex:0 0 auto;font-weight:600;}
 
 /* --- Jadual --- */
 .tbl th{background:#f8fafc;color:#475569;padding:.7rem 1rem;text-transform:uppercase;
@@ -350,13 +375,17 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
           <div class="a4-page" id="pageOne">
             <div>
               <div class="pv-kepala">
-                <img id="pvLogo1" class="pv-logo hidden" alt="">
-                <div class="pv-kepala-teks">
-                  <h1 id="pvSekolah" class="pv-sekolah"></h1>
-                  <p id="pvAlamat" class="pv-alamat"></p>
-                  <p id="pvTajukSistem" class="pv-sistem"></p>
+                <div class="pv-logo-set">
+                  <img id="pvLogo1" class="pv-logo hidden" alt="">
+                  <img id="pvLogo2" class="pv-logo hidden" alt="">
                 </div>
-                <img id="pvLogo2" class="pv-logo hidden" alt="">
+                <div class="pv-kepala-teks">
+                  <h1 id="pvTajukDokumen" class="pv-tajuk-dok"></h1>
+                  <p id="pvSekolah" class="pv-sekolah"></p>
+                  <p id="pvAlamat" class="pv-alamat"></p>
+                  <p id="pvTelefon" class="pv-alamat"></p>
+                  <p id="pvMoto" class="pv-moto"></p>
+                </div>
               </div>
 
               <div class="kotak pv-sela">
@@ -383,7 +412,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
               <div class="kotak amber pv-sela"><div class="lbl">Rumusan</div><div class="val" id="pvRumusan">-</div></div>
             </div>
 
-            <div class="pv-kaki">
+            <div class="pv-kaki" id="kakiSatu">
               <div class="pv-grid pv-2 pv-tandatangan">
                 <div>
                   <div class="lbl">Disediakan Oleh</div>
@@ -408,14 +437,24 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
           <!-- HALAMAN 2: GAMBAR (disembunyikan sepenuhnya jika tiada gambar) -->
           <div class="a4-page" id="pageTwo">
             <div class="pv-lajur">
-              <div class="pv-kepala-gambar">
-                <h2 class="pv-tajuk-lampiran">LAMPIRAN GAMBAR AKTIVITI</h2>
-                <p id="pvTajuk2" class="pv-alamat"></p>
+              <div class="pv-kepala-ringkas merah">
+                <div>
+                  <h2 class="pv-tajuk-muka">Gambar Aktiviti</h2>
+                  <p class="pv-sub-muka">Dokumentasi Bergambar</p>
+                  <p id="pvTajuk2" class="pv-alamat" style="font-weight:500;margin-top:2px"></p>
+                </div>
+                <div class="pv-logo-set" id="logoMukaDua"></div>
               </div>
               <!-- grid mengisi tinggi baki halaman supaya tiada ruang putih tergantung -->
               <div id="pvGridGambar" class="pv-grid pv-isi"></div>
             </div>
-            <div class="pv-kaki-kanan" id="pvFooter2"></div>
+            <div class="pv-kaki-muka">
+              <div>
+                <div class="lbl" style="margin-bottom:1px">Disediakan Oleh</div>
+                <div id="pvNama2" style="font-weight:700;color:#0f172a;font-size:11px">-</div>
+              </div>
+              <div id="pvFooter2"></div>
+            </div>
           </div>
 
           <!-- HALAMAN 3+: PDF DILAMPIR -->
@@ -481,11 +520,18 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div><label class="lbl">Nama Sekolah</label><input id="cNAMA_SEKOLAH" class="inp"></div>
           <div><label class="lbl">Alamat Sekolah</label><input id="cALAMAT_SEKOLAH" class="inp"></div>
-          <div><label class="lbl">Nama Sistem</label><input id="cNAMA_SISTEM" class="inp"></div>
+          <div><label class="lbl">Nama Sistem (paparan aplikasi)</label><input id="cNAMA_SISTEM" class="inp"></div>
           <div><label class="lbl">Singkatan (nav bar)</label><input id="cSINGKATAN" class="inp"></div>
+          <div class="md:col-span-2"><label class="lbl">Tajuk Dokumen (kepala PDF)</label>
+            <input id="cTAJUK_DOKUMEN" class="inp" placeholder="One Page Report (OPR)"></div>
+          <div><label class="lbl">No. Telefon</label><input id="cTELEFON" class="inp" placeholder="04-2813245"></div>
+          <div><label class="lbl">No. Faks</label><input id="cFAKS" class="inp" placeholder="04-2833281"></div>
+          <div class="md:col-span-2"><label class="lbl">Moto Sekolah (pilihan)</label>
+            <input id="cMOTO" class="inp" placeholder="Our Team, One Vision, Merchuan Excellent"></div>
           <div><label class="lbl">Nama Pengetua</label><input id="cNAMA_PENGETUA" class="inp"></div>
           <div><label class="lbl">Jawatan Penyemak</label><input id="cJAWATAN_PENYEMAK" class="inp"></div>
-          <div><label class="lbl">Teks Footer PDF</label><input id="cFOOTER_PDF" class="inp"></div>
+          <div><label class="lbl">Teks Kaki PDF (hak cipta)</label>
+            <input id="cFOOTER_PDF" class="inp" placeholder="© All Rights Reserved by SMK ..."></div>
           <div><label class="lbl">Prefix Nama Fail PDF</label><input id="cPREFIX_FAIL" class="inp"></div>
           <div><label class="lbl">Tahun Sesi</label><input id="cTAHUN_SESI" class="inp"></div>
         </div>
@@ -606,7 +652,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
    ===================================================================== */
 
 /* >>> ISI URL WEB APP ANDA DI SINI (berakhir dengan /exec) <<< */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPrRism8f40d1N-WPGEVV9_suQ_xo2FitSpjEYAxuxgjAlg1UZ1ZWv4Pobi4T-UFBy/exec";
+const SCRIPT_URL = "";
 
 // ---------------------------------------------------------------- state
 /* Akses storan pelayar dibungkus try/catch. Dalam mod privasi ketat, iframe
@@ -772,6 +818,17 @@ async function mula() {
   tunjuk('skrinLogin', true);
 }
 
+/** Isi satu bekas dengan logo bersaiz kecil (untuk kepala ringkas). */
+function isiLogoKecil(bekas, cfg) {
+  if (!bekas) return;
+  bekas.textContent = '';
+  [cfg.logo1, cfg.logo2].filter(Boolean).forEach(src => {
+    const im = document.createElement('img');
+    im.className = 'pv-logo-kecil'; im.src = src; im.alt = '';
+    bekas.appendChild(im);
+  });
+}
+
 function pakaiTema(cfg) {
   document.documentElement.style.setProperty('--w1', cfg.warna1);
   document.documentElement.style.setProperty('--w2', cfg.warna2);
@@ -788,10 +845,19 @@ function pakaiTema(cfg) {
   $('loginConsent').textContent = cfg.consent || '';
   $('navSingkatan').textContent = cfg.singkatan;
   $('navSekolah').textContent = cfg.namaSekolah;
+  // --- kepala penuh muka 1 ---
+  $('pvTajukDokumen').textContent = cfg.tajukDokumen || cfg.namaSistem || 'One Page Report';
   $('pvSekolah').textContent = cfg.namaSekolah;
   $('pvAlamat').textContent = cfg.alamatSekolah || '';
-  $('pvTajukSistem').textContent = (cfg.namaSistem || '').toUpperCase();
+  const talian = [];
+  if (cfg.telefon) talian.push('Tel: ' + cfg.telefon);
+  if (cfg.faks) talian.push('Faks: ' + cfg.faks);
+  $('pvTelefon').textContent = talian.join('  |  ');
+  $('pvMoto').textContent = cfg.moto ? '\u201C' + cfg.moto + '\u201D' : '';
   $('pvPenyemak').textContent = cfg.jawatanPenyemak || '-';
+
+  // --- logo kecil pada kepala ringkas muka gambar ---
+  isiLogoKecil($('logoMukaDua'), cfg);
   $('teksConsent').textContent = cfg.consent || 'Saya mengesahkan maklumat ini benar dan kebenaran telah diperoleh untuk gambar yang memaparkan murid.';
   $('footerApp').textContent = cfg.namaSistem + ' v' + (cfg.versi || '2.0') + ' · ' + cfg.namaSekolah;
 }
@@ -985,9 +1051,10 @@ function lukisPratonton() {
   isi('pvRumusan', g('fRumusan'));
   isi('pvNama', g('fNama'));
 
-  const footer = (CFG.namaSekolah || '') + (CFG.footerPdf ? ' · ' + CFG.footerPdf : '');
+  const footer = CFG.footerPdf || ('\u00A9 ' + (CFG.namaSekolah || ''));
   $('pvFooter').textContent = footer;
   $('pvFooter2').textContent = footer;
+  $('pvNama2').textContent = g('fNama') || '-';
   $('pvTarikhCetak').textContent = 'Dijana: ' + tarikhDMY(new Date());
 
   lukisGridGambar();
@@ -1088,19 +1155,49 @@ async function lampirPdf(dataUrl, nama) {
   lukisHalamanPdf();
 }
 
+/**
+ * Bina kepala ringkas — tajuk besar di kiri, logo kecil bersebelahan di kanan.
+ * Digunakan oleh halaman lampiran PDF. Muka 1 kekal guna kepala penuh
+ * (logo besar di kiri + nama & alamat sekolah).
+ */
+function kepalaRingkas(tajuk, subtajuk, nota) {
+  const kepala = e_('div', 'pv-kepala-ringkas');
+  const kiri = e_('div');
+  kiri.appendChild(e_('h2', 'pv-tajuk-muka', tajuk));
+  if (subtajuk) kiri.appendChild(e_('p', 'pv-sub-muka', subtajuk));
+  if (nota) {
+    const n = e_('p', 'pv-alamat', nota);
+    n.style.fontWeight = '500'; n.style.marginTop = '2px';
+    kiri.appendChild(n);
+  }
+  kepala.appendChild(kiri);
+  const bekasLogo = e_('div', 'pv-logo-set');
+  isiLogoKecil(bekasLogo, CFG);
+  kepala.appendChild(bekasLogo);
+  return kepala;
+}
+
 function lukisHalamanPdf() {
   const bekas = $('pvLampiranPdf'); bekas.textContent = '';
   pdfHalaman.forEach(fail => {
     fail.halaman.forEach((src, i) => {
       const muka = e_('div', 'a4-page lampiran');
-      const kepala = e_('div', 'text-center border-b-2 pb-2 mb-3');
-      kepala.style.borderColor = CFG.warna1 || '#0f766e';
-      kepala.appendChild(e_('h2', 'text-sm font-bold', 'LAMPIRAN: ' + fail.nama));
-      kepala.appendChild(e_('p', 'text-[10px] text-slate-500', 'Halaman ' + (i + 1) + ' daripada ' + fail.halaman.length));
-      muka.appendChild(kepala);
+      muka.appendChild(kepalaRingkas(
+        'Lampiran Dokumen', fail.nama,
+        'Halaman ' + (i + 1) + ' daripada ' + fail.halaman.length));
+
       const im = document.createElement('img');
-      im.src = src; im.className = 'w-full object-contain'; im.style.maxHeight = '240mm'; im.alt = '';
+      im.src = src; im.alt = '';
+      im.style.cssText = 'width:100%;object-fit:contain;max-height:225mm;' +
+        'border:1px solid #e2e8f0;background:#fff;border-radius:6px;';
       muka.appendChild(im);
+
+      const kaki = e_('div', 'pv-kaki-muka');
+      kaki.style.marginTop = 'auto';
+      kaki.appendChild(e_('div', '', 'Dokumen ini dilampirkan secara elektronik'));
+      kaki.appendChild(e_('div', '', CFG.footerPdf || ('\u00A9 ' + (CFG.namaSekolah || ''))));
+      muka.appendChild(kaki);
+
       bekas.appendChild(muka);
     });
   });
@@ -1505,14 +1602,21 @@ async function eksportCsv() {
 }
 
 // ---------------------------------------------------------------- tetapan
+/** Satu senarai sahaja, dikongsi oleh muatTetapan() dan simpanTetapan()
+    supaya medan baharu tidak terlupa di salah satu tempat. */
+const KUNCI_CONFIG = [
+  'NAMA_SEKOLAH', 'ALAMAT_SEKOLAH', 'NAMA_SISTEM', 'SINGKATAN', 'TAJUK_DOKUMEN',
+  'TELEFON', 'FAKS', 'MOTO', 'NAMA_PENGETUA', 'JAWATAN_PENYEMAK', 'FOOTER_PDF',
+  'PREFIX_FAIL', 'TAHUN_SESI', 'WARNA_1', 'WARNA_2', 'WARNA_AKSEN',
+  'CONSENT_TEXT', 'RETENTION_BULAN', 'SESSION_TTL_JAM', 'MAX_UPLOAD_MB',
+  'PDF_AKSES', 'FOLDER_ID'
+];
+
 async function muatTetapan() {
   try {
     const r = await api('CONFIG_PENUH');
     const c = r.config;
-    ['NAMA_SEKOLAH', 'ALAMAT_SEKOLAH', 'NAMA_SISTEM', 'SINGKATAN', 'NAMA_PENGETUA',
-     'JAWATAN_PENYEMAK', 'FOOTER_PDF', 'PREFIX_FAIL', 'TAHUN_SESI', 'WARNA_1', 'WARNA_2',
-     'WARNA_AKSEN', 'CONSENT_TEXT', 'RETENTION_BULAN', 'SESSION_TTL_JAM', 'MAX_UPLOAD_MB',
-     'PDF_AKSES', 'FOLDER_ID'].forEach(k => { const n = $('c' + k); if (n) n.value = c[k] || ''; });
+    KUNCI_CONFIG.forEach(k => { const n = $('c' + k); if (n) n.value = c[k] || ''; });
     $('pratontonLogo1').src = CFG.logo1 || '';
     $('pratontonLogo2').src = CFG.logo2 || '';
     tunjukPautanLogo(1, c.LOGO1_ID, '');
@@ -1521,12 +1625,8 @@ async function muatTetapan() {
 }
 
 async function simpanTetapan() {
-  const kunci = ['NAMA_SEKOLAH', 'ALAMAT_SEKOLAH', 'NAMA_SISTEM', 'SINGKATAN', 'NAMA_PENGETUA',
-    'JAWATAN_PENYEMAK', 'FOOTER_PDF', 'PREFIX_FAIL', 'TAHUN_SESI', 'WARNA_1', 'WARNA_2',
-    'WARNA_AKSEN', 'CONSENT_TEXT', 'RETENTION_BULAN', 'SESSION_TTL_JAM', 'MAX_UPLOAD_MB',
-    'PDF_AKSES', 'FOLDER_ID'];
   const cfg = {};
-  kunci.forEach(k => { const n = $('c' + k); if (n && n.value !== '') cfg[k] = n.value; });
+  KUNCI_CONFIG.forEach(k => { const n = $('c' + k); if (n && n.value !== '') cfg[k] = n.value; });
 
   overlay(true, 'Menyimpan...');
   try {
