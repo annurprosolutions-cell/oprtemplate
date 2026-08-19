@@ -102,6 +102,11 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
 .pv-sub-muka{font-size:.72rem;font-weight:700;color:#e11d48;margin-top:2px;}
 .pv-logo-kecil{height:52px;width:auto;max-width:60px;object-fit:contain;}
 
+/* --- Baris jenis laporan: satu template, empat profil --- */
+.pv-jenis{text-align:center;font-size:.72rem;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--w2);background:#f1f5f9;
+  border:1px solid #e2e8f0;border-radius:4px;padding:5px 8px;margin-bottom:8px;}
+
 /* --- Bahagian lain dokumen --- */
 .pv-grid{display:grid;gap:6px;}
 .pv-2{grid-template-columns:repeat(2,minmax(0,1fr));}
@@ -142,6 +147,13 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
 .tab-btn{padding:.6rem 1rem;border-radius:.6rem;font-size:.82rem;font-weight:700;color:#475569;}
 .tab-btn.aktif{background:var(--w2);color:#fff;}
 .inp{width:100%;border:1px solid #e2e8f0;background:#f8fafc;border-radius:.5rem;padding:.6rem;font-size:.87rem;}
+/* Pemilih jenis laporan dalam borang */
+.jenis-btn{flex:1 1 auto;min-width:88px;padding:.5rem .4rem;border-radius:.55rem;
+  border:1px solid #e2e8f0;background:#f8fafc;color:#475569;font-size:.72rem;
+  font-weight:700;line-height:1.2;text-align:center;cursor:pointer;}
+.jenis-btn i{display:block;font-size:.95rem;margin-bottom:3px;color:#94a3b8;}
+.jenis-btn.aktif{background:var(--w2);border-color:var(--w2);color:#fff;}
+.jenis-btn.aktif i{color:#fff;}
 .inp:focus{outline:none;background:#fff;border-color:var(--w2);box-shadow:0 0 0 3px rgba(49,46,129,.12);}
 .kad{background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:1.5rem;}
 #overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.72);z-index:9999;
@@ -294,11 +306,19 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
           <h2 class="text-base font-bold mb-4"><i class="fas fa-pen-to-square mr-2 teks-w2"></i>Maklumat Laporan</h2>
           <form id="formOpr" class="space-y-3.5" onsubmit="return false">
             <input type="hidden" id="fId">
-            <div><label class="lbl">Nama Program / Pertandingan</label>
+            <input type="hidden" id="fJenis" value="KOKURIKULUM">
+
+            <div>
+              <label class="lbl">Jenis Laporan</label>
+              <div id="pilihJenis" class="flex flex-wrap gap-1.5"></div>
+              <p id="notaJenis" class="text-[10px] text-slate-400 mt-1.5"></p>
+            </div>
+
+            <div><label class="lbl" id="lblTajuk">Nama Program / Pertandingan</label>
               <input id="fTajuk" class="inp" oninput="lukisPratonton()" placeholder="Contoh: Kejohanan Bola Sepak MSSD"></div>
 
             <div>
-              <label class="lbl">Unit Kokurikulum</label>
+              <label class="lbl" id="lblUnit">Unit Kokurikulum</label>
               <div class="relative">
                 <input type="hidden" id="fUnit">
                 <input id="cariUnit" class="inp cursor-pointer" placeholder="Cari atau pilih unit..." autocomplete="off"
@@ -309,26 +329,26 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-              <div><label class="lbl">Anjuran</label><select id="fAnjuran" class="inp" onchange="lukisPratonton()"></select></div>
-              <div><label class="lbl">Peringkat</label><select id="fPeringkat" class="inp" onchange="lukisPratonton()"></select></div>
+              <div><label class="lbl" id="lblAnjuran">Anjuran</label><select id="fAnjuran" class="inp" onchange="lukisPratonton()"></select></div>
+              <div><label class="lbl" id="lblPeringkat">Peringkat</label><select id="fPeringkat" class="inp" onchange="lukisPratonton()"></select></div>
             </div>
 
             <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-3">
-              <p class="lbl mb-0">Perincian Program</p>
-              <div><label class="text-xs text-slate-500">Tarikh Pelaksanaan</label>
+              <p class="lbl mb-0" id="lblPerincian">Perincian Program</p>
+              <div><label class="text-xs text-slate-500" id="lblTarikh">Tarikh Pelaksanaan</label>
                 <input type="date" id="fTarikh" class="inp text-xs" onchange="lukisPratonton()"></div>
               <div class="grid grid-cols-2 gap-2">
-                <div><label class="text-xs text-slate-500">Murid Lelaki</label>
+                <div><label class="text-xs text-slate-500" id="lblLelaki">Murid Lelaki</label>
                   <input type="number" min="0" id="fLelaki" class="inp text-xs" oninput="lukisPratonton()" placeholder="0"></div>
-                <div><label class="text-xs text-slate-500">Murid Perempuan</label>
+                <div><label class="text-xs text-slate-500" id="lblPerempuan">Murid Perempuan</label>
                   <input type="number" min="0" id="fPerempuan" class="inp text-xs" oninput="lukisPratonton()" placeholder="0"></div>
               </div>
             </div>
 
-            <div><label class="lbl">Objektif</label><textarea id="fObjektif" rows="3" class="inp" oninput="lukisPratonton()"></textarea></div>
-            <div><label class="lbl text-rose-600">Kaedah Pelaksanaan</label><select id="fKaedah" class="inp" onchange="lukisPratonton()"></select></div>
-            <div><label class="lbl text-emerald-600">Penambahbaikan</label><textarea id="fImprove" rows="2" class="inp" oninput="lukisPratonton()"></textarea></div>
-            <div><label class="lbl text-amber-600">Rumusan</label><textarea id="fRumusan" rows="2" class="inp" oninput="lukisPratonton()"></textarea></div>
+            <div><label class="lbl" id="lblObjektif">Objektif</label><textarea id="fObjektif" rows="3" class="inp" oninput="lukisPratonton()"></textarea></div>
+            <div><label class="lbl text-rose-600" id="lblKaedah">Kaedah Pelaksanaan</label><select id="fKaedah" class="inp" onchange="lukisPratonton()"></select></div>
+            <div><label class="lbl text-emerald-600" id="lblImprove">Penambahbaikan</label><textarea id="fImprove" rows="2" class="inp" oninput="lukisPratonton()"></textarea></div>
+            <div><label class="lbl text-amber-600" id="lblRumusan">Rumusan</label><textarea id="fRumusan" rows="2" class="inp" oninput="lukisPratonton()"></textarea></div>
             <div><label class="lbl">Disediakan Oleh</label><input id="fNama" class="inp" oninput="lukisPratonton()"></div>
           </form>
           <button onclick="resetBorang()" class="mt-4 w-full text-slate-400 text-xs hover:text-slate-600 underline">Reset borang</button>
@@ -388,28 +408,30 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
                 </div>
               </div>
 
+              <div class="pv-jenis" id="pvJenis">Laporan Aktiviti Kokurikulum</div>
+
               <div class="kotak pv-sela">
-                <div class="lbl">Nama Program / Pertandingan</div>
+                <div class="lbl" id="pvLblTajuk">Nama Program / Pertandingan</div>
                 <div class="val pv-besar" id="pvTajuk">-</div>
               </div>
 
               <div class="pv-grid pv-3 pv-sela">
-                <div class="kotak indigo"><div class="lbl">Unit Kokurikulum</div><div class="val pv-kecil" id="pvUnit">-</div></div>
-                <div class="kotak indigo"><div class="lbl">Anjuran</div><div class="val pv-kecil" id="pvAnjuran">-</div></div>
-                <div class="kotak indigo"><div class="lbl">Peringkat</div><div class="val pv-kecil" id="pvPeringkat">-</div></div>
+                <div class="kotak indigo"><div class="lbl" id="pvLblUnit">Unit Kokurikulum</div><div class="val pv-kecil" id="pvUnit">-</div></div>
+                <div class="kotak indigo"><div class="lbl" id="pvLblAnjuran">Anjuran</div><div class="val pv-kecil" id="pvAnjuran">-</div></div>
+                <div class="kotak indigo"><div class="lbl" id="pvLblPeringkat">Peringkat</div><div class="val pv-kecil" id="pvPeringkat">-</div></div>
               </div>
 
               <div class="pv-grid pv-4 pv-sela">
-                <div class="kotak emerald"><div class="lbl">Tarikh</div><div class="val pv-kecil" id="pvTarikh">-</div></div>
-                <div class="kotak emerald"><div class="lbl">Murid Lelaki</div><div class="val pv-kecil" id="pvLelaki">0</div></div>
-                <div class="kotak emerald"><div class="lbl">Murid Perempuan</div><div class="val pv-kecil" id="pvPerempuan">0</div></div>
+                <div class="kotak emerald"><div class="lbl" id="pvLblTarikh">Tarikh</div><div class="val pv-kecil" id="pvTarikh">-</div></div>
+                <div class="kotak emerald"><div class="lbl" id="pvLblLelaki">Murid Lelaki</div><div class="val pv-kecil" id="pvLelaki">0</div></div>
+                <div class="kotak emerald"><div class="lbl" id="pvLblPerempuan">Murid Perempuan</div><div class="val pv-kecil" id="pvPerempuan">0</div></div>
                 <div class="kotak emerald"><div class="lbl">Jumlah</div><div class="val pv-kecil pv-tebal" id="pvJumlah">0</div></div>
               </div>
 
-              <div class="kotak pv-sela"><div class="lbl">Objektif</div><div class="val" id="pvObjektif">-</div></div>
-              <div class="kotak rose pv-sela"><div class="lbl">Kaedah Pelaksanaan</div><div class="val" id="pvKaedah">-</div></div>
-              <div class="kotak emerald pv-sela"><div class="lbl">Penambahbaikan</div><div class="val" id="pvImprove">-</div></div>
-              <div class="kotak amber pv-sela"><div class="lbl">Rumusan</div><div class="val" id="pvRumusan">-</div></div>
+              <div class="kotak pv-sela"><div class="lbl" id="pvLblObjektif">Objektif</div><div class="val" id="pvObjektif">-</div></div>
+              <div class="kotak rose pv-sela"><div class="lbl" id="pvLblKaedah">Kaedah Pelaksanaan</div><div class="val" id="pvKaedah">-</div></div>
+              <div class="kotak emerald pv-sela"><div class="lbl" id="pvLblImprove">Penambahbaikan</div><div class="val" id="pvImprove">-</div></div>
+              <div class="kotak amber pv-sela"><div class="lbl" id="pvLblRumusan">Rumusan</div><div class="val" id="pvRumusan">-</div></div>
             </div>
 
             <div class="pv-kaki" id="kakiSatu">
@@ -469,6 +491,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
         <div class="flex flex-wrap gap-3 justify-between items-center mb-4">
           <h2 id="tajukSenarai" class="text-base font-bold"><i class="fas fa-list-ul mr-2 teks-w2"></i>Laporan Saya</h2>
           <div class="flex gap-2">
+            <select id="tapisJenis" class="inp text-xs w-40" onchange="muatSenarai()"></select>
             <input id="cariLaporan" class="inp text-xs w-52" placeholder="Cari tajuk / unit / guru..." onkeyup="if(event.key==='Enter')muatSenarai()">
             <button onclick="muatSenarai()" class="btn-utama px-4 rounded-lg text-xs font-bold"><i class="fas fa-magnifying-glass"></i></button>
           </div>
@@ -476,7 +499,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
         <div class="overflow-x-auto scroll max-h-[65vh]">
           <table class="w-full tbl">
             <thead class="sticky top-0 z-10"><tr>
-              <th>Tarikh</th><th>Program</th><th>Unit</th><th id="thGuru">Guru</th>
+              <th>Tarikh</th><th>Jenis</th><th>Tajuk</th><th>Unit</th><th id="thGuru">Guru</th>
               <th class="text-center">Status</th><th class="text-center">Tindakan</th>
             </tr></thead>
             <tbody id="badanSenarai"></tbody>
@@ -488,6 +511,10 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
     <!-- ---------- TAB: DASHBOARD ---------- -->
     <section id="tabDashboard" class="tab-isi hidden space-y-6">
       <div id="kadStat" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></div>
+      <div class="kad">
+        <h3 class="text-sm font-bold mb-3"><i class="fas fa-layer-group mr-2 teks-w2"></i>Taburan Mengikut Jenis Laporan</h3>
+        <div id="jalurJenis" class="flex flex-wrap gap-2"></div>
+      </div>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="kad lg:col-span-2">
           <h3 class="text-sm font-bold mb-4"><i class="fas fa-chart-column mr-2 teks-w2"></i>Laporan Mengikut Unit</h3>
@@ -567,6 +594,29 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
           PDF — jadi logo sentiasa muncul tanpa isu CORS.
         </p>
         <button onclick="simpanTetapan()" class="btn-utama px-6 py-2.5 rounded-lg text-sm font-bold"><i class="fas fa-floppy-disk mr-2"></i>Simpan Tetapan</button>
+      </div>
+
+      <!-- Jenis laporan -->
+      <div id="setJenis" class="set-isi hidden kad space-y-4">
+        <h3 class="text-base font-bold"><i class="fas fa-layer-group mr-2 teks-w2"></i>Jenis Laporan</h3>
+        <p class="text-xs text-slate-500">
+          Satu template, beberapa cara guna. Matikan jenis yang sekolah anda tidak perlukan —
+          guru hanya akan nampak jenis yang aktif. Tajuk dokumen ialah baris yang dicetak
+          di bawah kepala surat dalam PDF.
+        </p>
+        <div id="kotakJenis" class="space-y-3"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end pt-2 border-t border-slate-100">
+          <div>
+            <label class="lbl">Jenis Lalai (dipilih automatik bila guru buka borang)</label>
+            <select id="cJENIS_DEFAULT" class="inp"></select>
+          </div>
+          <button onclick="simpanJenisTetapan()" class="btn-utama px-6 py-2.5 rounded-lg text-sm font-bold">
+            <i class="fas fa-floppy-disk mr-2"></i>Simpan Jenis Laporan</button>
+        </div>
+        <p class="text-[11px] text-slate-400">
+          Senarai dropdown bagi setiap jenis (kelas, jawatankuasa, mata pelajaran, tingkatan)
+          boleh disunting dalam tab <span class="font-semibold">Senarai Pilihan</span>.
+        </p>
       </div>
 
       <!-- Senarai pilihan -->
@@ -652,7 +702,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
    ===================================================================== */
 
 /* >>> ISI URL WEB APP ANDA DI SINI (berakhir dengan /exec) <<< */
-const SCRIPT_URL = "";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRlEtSN79c4n9xTwKnfoHM-xCtkSYs_-jRcyp1d-kiBy0nDF9bll9kwby5v2wv8tLL/exec";
 
 // ---------------------------------------------------------------- state
 /* Akses storan pelayar dibungkus try/catch. Dalam mod privasi ketat, iframe
@@ -681,10 +731,120 @@ const LABEL_SENARAI = {
   UNIT_UNIFORM: 'Unit Beruniform',
   UNIT_KELAB:   'Kelab / Persatuan',
   UNIT_SUKAN:   'Sukan / Permainan',
+  KELAS:        'Kelas',
+  JAWATANKUASA: 'Unit / Jawatankuasa',
+  SUBJEK:       'Mata Pelajaran',
+  TINGKATAN:    'Tingkatan',
   ANJURAN:      'Anjuran',
   PERINGKAT:    'Peringkat Pelibatan',
   KAEDAH:       'Kaedah Pelaksanaan'
 };
+
+/* =====================================================================
+   PROFIL JENIS LAPORAN
+   ---------------------------------------------------------------------
+   Satu template, empat cara guna. Setiap profil hanya menukar LABEL dan
+   SUMBER DROPDOWN — struktur data dalam Sheet kekal sama, jadi laporan
+   dari semua jenis boleh disenarai, ditapis dan dikira bersama.
+
+   kategoriUnit : kategori Senarai yang mengisi dropdown medan pertama
+   kategoriPeringkat : kategori untuk medan ketiga (peringkat/tingkatan)
+   label        : teks yang menggantikan label lalai pada borang + PDF
+   ===================================================================== */
+const PROFIL_JENIS = {
+  KOKURIKULUM: {
+    nama: 'Kokurikulum', ikon: 'fa-medal',
+    nota: 'Untuk unit beruniform, kelab/persatuan dan sukan.',
+    kategoriUnit: ['UNIT_UNIFORM', 'UNIT_KELAB', 'UNIT_SUKAN'],
+    kategoriPeringkat: 'PERINGKAT',
+    petunjukUnit: 'Cari atau pilih unit...',
+    petunjukTajuk: 'Contoh: Kejohanan Bola Sepak MSSD',
+    label: {
+      Tajuk: 'Nama Program / Pertandingan', Unit: 'Unit Kokurikulum',
+      Anjuran: 'Anjuran', Peringkat: 'Peringkat', Perincian: 'Perincian Program',
+      Tarikh: 'Tarikh Pelaksanaan', Lelaki: 'Murid Lelaki', Perempuan: 'Murid Perempuan',
+      Objektif: 'Objektif', Kaedah: 'Kaedah Pelaksanaan',
+      Improve: 'Penambahbaikan', Rumusan: 'Rumusan'
+    }
+  },
+  KELAS: {
+    nama: 'Kelas', ikon: 'fa-chalkboard-user',
+    nota: 'Untuk aktiviti atau program peringkat kelas.',
+    kategoriUnit: ['KELAS'],
+    kategoriPeringkat: 'PERINGKAT',
+    petunjukUnit: 'Cari atau pilih kelas...',
+    petunjukTajuk: 'Contoh: Program Motivasi Kelas 4 Sains',
+    label: {
+      Tajuk: 'Nama Aktiviti / Program Kelas', Unit: 'Kelas',
+      Anjuran: 'Anjuran', Peringkat: 'Peringkat', Perincian: 'Perincian Aktiviti',
+      Tarikh: 'Tarikh Aktiviti', Lelaki: 'Murid Lelaki', Perempuan: 'Murid Perempuan',
+      Objektif: 'Objektif Aktiviti', Kaedah: 'Kaedah Pelaksanaan',
+      Improve: 'Penambahbaikan', Rumusan: 'Rumusan & Impak'
+    }
+  },
+  EVENT: {
+    nama: 'Event', ikon: 'fa-calendar-star',
+    nota: 'Untuk majlis, sambutan dan program peringkat sekolah.',
+    kategoriUnit: ['JAWATANKUASA'],
+    kategoriPeringkat: 'PERINGKAT',
+    petunjukUnit: 'Cari atau pilih jawatankuasa...',
+    petunjukTajuk: 'Contoh: Majlis Anugerah Cemerlang 2026',
+    label: {
+      Tajuk: 'Nama Event / Majlis', Unit: 'Unit / Jawatankuasa',
+      Anjuran: 'Penganjur', Peringkat: 'Peringkat', Perincian: 'Perincian Event',
+      Tarikh: 'Tarikh Event', Lelaki: 'Peserta Lelaki', Perempuan: 'Peserta Perempuan',
+      Objektif: 'Objektif Event', Kaedah: 'Kaedah Pelaksanaan',
+      Improve: 'Penambahbaikan', Rumusan: 'Rumusan & Impak'
+    }
+  },
+  SUBJEK: {
+    nama: 'Subjek', ikon: 'fa-book-open',
+    nota: 'Untuk program panitia, intervensi dan aktiviti PdP.',
+    kategoriUnit: ['SUBJEK'],
+    kategoriPeringkat: 'TINGKATAN',
+    petunjukUnit: 'Cari atau pilih mata pelajaran...',
+    petunjukTajuk: 'Contoh: Kelas Intervensi Matematik Tingkatan 5',
+    label: {
+      Tajuk: 'Nama Aktiviti / Intervensi', Unit: 'Mata Pelajaran',
+      Anjuran: 'Anjuran', Peringkat: 'Tingkatan', Perincian: 'Perincian Pelaksanaan',
+      Tarikh: 'Tarikh Pelaksanaan', Lelaki: 'Murid Lelaki', Perempuan: 'Murid Perempuan',
+      Objektif: 'Objektif Pembelajaran', Kaedah: 'Strategi PdP',
+      Improve: 'Penambahbaikan', Rumusan: 'Refleksi & Impak'
+    }
+  }
+};
+
+const SENARAI_JENIS = ['KOKURIKULUM', 'KELAS', 'EVENT', 'SUBJEK'];
+let JENIS_SEMASA  = 'KOKURIKULUM';
+let jenisDipilih  = false;   // true selepas guru menekan butang jenis sendiri
+
+/** Tetapan per-jenis dari admin (aktif / tajuk dokumen / jawatan penyemak). */
+function tetapanJenis(kod) {
+  const dari = (CFG.jenis || {})[kod] || {};
+  const p = PROFIL_JENIS[kod] || PROFIL_JENIS.KOKURIKULUM;
+  return {
+    aktif:    dari.aktif !== false,
+    tajuk:    dari.tajuk    || ('Laporan ' + p.nama),
+    penyemak: dari.penyemak || CFG.jawatanPenyemak || '-'
+  };
+}
+
+function jenisAktif() {
+  const senarai = SENARAI_JENIS.filter(k => tetapanJenis(k).aktif);
+  return senarai.length ? senarai : ['KOKURIKULUM'];
+}
+
+/** Jenis lalai sekolah — digunakan bila guru belum memilih apa-apa. */
+function jenisLalaiSekolah() {
+  const aktif = jenisAktif();
+  return aktif.indexOf(CFG.jenisDefault) !== -1 ? CFG.jenisDefault : aktif[0];
+}
+
+/** Kekalkan pilihan guru bila tema dimuat semula; jika belum, guna lalai. */
+function pilihanJenisSemasa() {
+  if (jenisDipilih && jenisAktif().indexOf(JENIS_SEMASA) !== -1) return JENIS_SEMASA;
+  return jenisLalaiSekolah();
+}
 
 // ---------------------------------------------------------------- utiliti
 const $ = (id) => document.getElementById(id);
@@ -854,7 +1014,10 @@ function pakaiTema(cfg) {
   if (cfg.faks) talian.push('Faks: ' + cfg.faks);
   $('pvTelefon').textContent = talian.join('  |  ');
   $('pvMoto').textContent = cfg.moto ? '\u201C' + cfg.moto + '\u201D' : '';
-  $('pvPenyemak').textContent = cfg.jawatanPenyemak || '-';
+
+  // --- profil jenis laporan (label, penyemak, baris jenis dalam PDF) ---
+  lukisPilihJenis();
+  pakaiJenis(pilihanJenisSemasa(), { paksa: true, kekalUnit: true });
 
   // --- logo kecil pada kepala ringkas muka gambar ---
   isiLogoKecil($('logoMukaDua'), cfg);
@@ -915,6 +1078,7 @@ const TAB_DEF = [
 
 const SUBTAB_DEF = [
   { id: 'setIdentiti', label: 'Identiti & Jenama' },
+  { id: 'setJenis',    label: 'Jenis Laporan' },
   { id: 'setSenarai',  label: 'Senarai Pilihan' },
   { id: 'setPengguna', label: 'Pengguna' },
   { id: 'setPdpa',     label: 'PDPA & Keselamatan' },
@@ -951,8 +1115,8 @@ async function masukApp() {
 
   try { SENARAI = (await api('SENARAI_PILIHAN')).senarai; }
   catch (err) { SENARAI = {}; }
-  isiSemuaDropdown();
-  lukisPratonton();
+  lukisPilihJenis();
+  pakaiJenis(pilihanJenisSemasa(), { paksa: true, kekalUnit: true });
 }
 
 function tukarTab(id, btn) {
@@ -973,6 +1137,7 @@ function tukarSubTab(id, btn) {
   if (id === 'setPengguna') muatPengguna();
   if (id === 'setAudit') muatAudit();
   if (id === 'setSenarai') lukisEditorSenarai();
+  if (id === 'setJenis') lukisEditorJenis();
 }
 
 // ---------------------------------------------------------------- dropdown
@@ -984,24 +1149,135 @@ function isiSelect(id, items, teksKosong) {
 }
 
 function isiSemuaDropdown() {
-  isiSelect('fAnjuran',   SENARAI.ANJURAN,   'Pilih penganjur...');
-  isiSelect('fPeringkat', SENARAI.PERINGKAT, 'Pilih peringkat...');
-  isiSelect('fKaedah',    SENARAI.KAEDAH,    'Pilih kaedah...');
+  const p = PROFIL_JENIS[JENIS_SEMASA] || PROFIL_JENIS.KOKURIKULUM;
+  const simpanAnjuran = $('fAnjuran').value;
+  const simpanPeringkat = $('fPeringkat').value;
+  const simpanKaedah = $('fKaedah').value;
+
+  isiSelect('fAnjuran',   SENARAI.ANJURAN, 'Pilih penganjur...');
+  isiSelect('fPeringkat', SENARAI[p.kategoriPeringkat] || SENARAI.PERINGKAT,
+            'Pilih ' + p.label.Peringkat.toLowerCase() + '...');
+  isiSelect('fKaedah',    SENARAI.KAEDAH,  'Pilih kaedah...');
+
+  // Kekalkan pilihan pengguna jika nilainya masih wujud dalam senarai baharu.
+  pulihPilihan('fAnjuran', simpanAnjuran);
+  pulihPilihan('fPeringkat', simpanPeringkat);
+  pulihPilihan('fKaedah', simpanKaedah);
   lukisDropdownUnit();
 }
 
+function pulihPilihan(id, nilai) {
+  if (!nilai) return;
+  const s = $(id);
+  const ada = Array.prototype.some.call(s.options, o => o.value === nilai);
+  if (ada) s.value = nilai;
+}
+
+/** Sama seperti pulihPilihan, tetapi nilai yang tiada akan ditambah dahulu. */
+function pilihAtauTambah(id, nilai) {
+  const s = $(id); if (!s) return;
+  if (!nilai) { s.selectedIndex = 0; return; }
+  const ada = Array.prototype.some.call(s.options, o => o.value === nilai);
+  if (!ada) { const o = e_('option', '', nilai); o.value = nilai; s.appendChild(o); }
+  s.value = nilai;
+}
+
 function lukisDropdownUnit() {
+  const p = PROFIL_JENIS[JENIS_SEMASA] || PROFIL_JENIS.KOKURIKULUM;
   const dd = $('ddUnit'); dd.textContent = '';
-  ['UNIT_UNIFORM', 'UNIT_KELAB', 'UNIT_SUKAN'].forEach(kat => {
+  const kategori = p.kategoriUnit;
+  const tunjukTajukKat = kategori.length > 1;
+
+  let jumlah = 0;
+  kategori.forEach(kat => {
     const senarai = SENARAI[kat] || [];
     if (!senarai.length) return;
-    dd.appendChild(e_('div', 'dd-kat', LABEL_SENARAI[kat]));
+    jumlah += senarai.length;
+    if (tunjukTajukKat) dd.appendChild(e_('div', 'dd-kat', LABEL_SENARAI[kat] || kat));
     senarai.forEach(v => {
       const it = e_('div', 'dd-item', v);          // textContent — selamat
       it.addEventListener('click', () => pilihUnit(v));
       dd.appendChild(it);
     });
   });
+
+  if (!jumlah) {
+    dd.appendChild(e_('div', 'dd-kat',
+      'Senarai "' + (LABEL_SENARAI[kategori[0]] || kategori[0]) + '" masih kosong — admin boleh isi dalam Tetapan Sistem.'));
+  }
+}
+
+/**
+ * Tukar jenis laporan. Hanya label + sumber dropdown berubah; nilai yang
+ * sudah ditaip dikekalkan supaya guru tidak kehilangan kerja bila tersalah
+ * pilih jenis.
+ */
+function pakaiJenis(kod, opsyen) {
+  opsyen = opsyen || {};
+  if (!PROFIL_JENIS[kod]) kod = 'KOKURIKULUM';
+  if (kod === JENIS_SEMASA && !opsyen.paksa) return;
+  JENIS_SEMASA = kod;
+  $('fJenis').value = kod;
+
+  const p = PROFIL_JENIS[kod];
+  const t = tetapanJenis(kod);
+  const setTeks = (id, teks) => { const n = $(id); if (n) n.textContent = teks; };
+
+  // Label borang dan label kotak dalam pratonton PDF
+  Object.keys(p.label).forEach(k => {
+    setTeks('lbl' + k, p.label[k]);
+    setTeks('pvLbl' + k, p.label[k]);
+  });
+  setTeks('pvLblTarikh', 'Tarikh');       // kotak sempit — versi pendek
+  setTeks('notaJenis', p.nota);
+  $('fTajuk').placeholder = p.petunjukTajuk;
+  $('cariUnit').placeholder = p.petunjukUnit;
+
+  // Baris jenis + jawatan penyemak dalam PDF
+  setTeks('pvJenis', t.tajuk);
+  setTeks('pvPenyemak', t.penyemak);
+
+  document.querySelectorAll('#pilihJenis .jenis-btn').forEach(b => {
+    b.classList.toggle('aktif', b.dataset.jenis === kod);
+  });
+
+  // Sumber dropdown unit berbeza antara jenis, jadi unit lama dikosongkan
+  // kecuali semasa memuatkan rekod sedia ada untuk diedit.
+  if (!opsyen.kekalUnit) { $('fUnit').value = ''; $('cariUnit').value = ''; }
+  isiSemuaDropdown();
+  lukisPratonton();
+}
+
+function lukisPilihJenis() {
+  const bekas = $('pilihJenis'); if (!bekas) return;
+  bekas.textContent = '';
+  const aktif = jenisAktif();
+  aktif.forEach(kod => {
+    const p = PROFIL_JENIS[kod];
+    const b = e_('button', 'jenis-btn');
+    b.type = 'button';
+    b.dataset.jenis = kod;
+    const ic = document.createElement('i'); ic.className = 'fas ' + p.ikon;
+    b.appendChild(ic);
+    b.appendChild(document.createTextNode(p.nama));
+    b.addEventListener('click', () => { jenisDipilih = true; pakaiJenis(kod); });
+    bekas.appendChild(b);
+  });
+  // Hanya satu jenis dibenarkan: sembunyikan pemilih, borang jadi ringkas.
+  bekas.parentElement.style.display = aktif.length > 1 ? '' : 'none';
+
+  // Penapis pada tab Laporan mengikut jenis yang sama.
+  const tapis = $('tapisJenis');
+  if (tapis) {
+    const simpan = tapis.value;
+    tapis.textContent = '';
+    const semua = e_('option', '', 'Semua jenis'); semua.value = ''; tapis.appendChild(semua);
+    aktif.forEach(kod => {
+      const o = e_('option', '', PROFIL_JENIS[kod].nama); o.value = kod; tapis.appendChild(o);
+    });
+    pulihPilihan('tapisJenis', simpan);
+    tapis.style.display = aktif.length > 1 ? '' : 'none';
+  }
 }
 
 function bukaDropdown() { $('ddUnit').classList.remove('hidden'); }
@@ -1237,25 +1513,28 @@ function lukisSenaraiLampiran() {
  * Medan yang disemak sebelum hantar. Tiada satu pun yang menyekat penghantaran —
  * guru hanya diberi peringatan supaya mereka sedar apa yang tertinggal.
  */
+/* Label diambil dari profil jenis semasa supaya mesej peringatan menyebut
+   nama medan yang guru benar-benar nampak pada skrin. */
 const SEMAKAN_LENGKAP = [
-  { id: 'fUnit',      label: 'Unit Kokurikulum' },
-  { id: 'fAnjuran',   label: 'Anjuran' },
-  { id: 'fPeringkat', label: 'Peringkat Pelibatan' },
-  { id: 'fTarikh',    label: 'Tarikh Pelaksanaan' },
-  { id: 'fObjektif',  label: 'Objektif' },
-  { id: 'fKaedah',    label: 'Kaedah Pelaksanaan' },
-  { id: 'fImprove',   label: 'Penambahbaikan' },
-  { id: 'fRumusan',   label: 'Rumusan' },
+  { id: 'fUnit',      kunci: 'Unit' },
+  { id: 'fAnjuran',   kunci: 'Anjuran' },
+  { id: 'fPeringkat', kunci: 'Peringkat' },
+  { id: 'fTarikh',    kunci: 'Tarikh' },
+  { id: 'fObjektif',  kunci: 'Objektif' },
+  { id: 'fKaedah',    kunci: 'Kaedah' },
+  { id: 'fImprove',   kunci: 'Improve' },
+  { id: 'fRumusan',   kunci: 'Rumusan' },
   { id: 'fNama',      label: 'Disediakan Oleh' }
 ];
 
 function medanKosong() {
+  const p = PROFIL_JENIS[JENIS_SEMASA] || PROFIL_JENIS.KOKURIKULUM;
   const senarai = SEMAKAN_LENGKAP
     .filter(m => !String($(m.id).value || '').trim())
-    .map(m => m.label);
+    .map(m => m.label || p.label[m.kunci] || m.kunci);
   const l = Number($('fLelaki').value) || 0;
-  const p = Number($('fPerempuan').value) || 0;
-  if (l + p === 0) senarai.push('Bilangan pelibatan murid');
+  const pr = Number($('fPerempuan').value) || 0;
+  if (l + pr === 0) senarai.push('Bilangan ' + p.label.Lelaki.split(' ')[0].toLowerCase() + ' yang terlibat');
   if (!imejBukti.length) senarai.push('Gambar aktiviti');
   return senarai;
 }
@@ -1306,7 +1585,8 @@ async function sahkanSebelumHantar(status) {
 
 async function hantarLaporan(status) {
   // Dua sahaja yang benar-benar wajib: tajuk (untuk nama fail) dan persetujuan PDPA.
-  if (!$('fTajuk').value.trim()) return ralat('Sila isi nama program / pertandingan.');
+  const profil = PROFIL_JENIS[JENIS_SEMASA] || PROFIL_JENIS.KOKURIKULUM;
+  if (!$('fTajuk').value.trim()) return ralat('Sila isi ' + profil.label.Tajuk.toLowerCase() + '.');
   if (!$('fId').value && !$('fConsent').checked) return ralat('Sila tanda kotak persetujuan notis PDPA.');
   if (!(await sahkanSebelumHantar(status))) return;
 
@@ -1340,6 +1620,7 @@ async function hantarLaporan(status) {
         nama: img.nama
       })),
       data: {
+        jenis: $('fJenis').value,
         nama: $('fNama').value, tajuk: $('fTajuk').value, unit: $('fUnit').value,
         anjuran: $('fAnjuran').value, peringkat: $('fPeringkat').value,
         tarikhProgram: $('fTarikh').value, jumLelaki: $('fLelaki').value,
@@ -1372,6 +1653,8 @@ function resetBorang() {
   $('fConsent').checked = false;
   imejBukti = []; pdfHalaman = [];
   $('lencanaEdit').classList.add('hidden');
+  jenisDipilih = false;
+  pakaiJenis(jenisLalaiSekolah(), { paksa: true });
   lukisSenaraiLampiran(); lukisHalamanPdf(); lukisPratonton();
 }
 
@@ -1379,16 +1662,21 @@ function resetBorang() {
 async function muatSenarai() {
   const tb = $('badanSenarai');
   tb.textContent = '';
-  tb.appendChild(barisKosong(6, 'Memuatkan...'));
+  tb.appendChild(barisKosong(7, 'Memuatkan...'));
   try {
-    const r = await api('SENARAI_LAPORAN', { carian: $('cariLaporan').value.trim() });
+    const r = await api('SENARAI_LAPORAN', {
+      carian: $('cariLaporan').value.trim(),
+      jenis: $('tapisJenis') ? $('tapisJenis').value : ''
+    });
     cacheSenarai = r.data;
     tb.textContent = '';
-    if (!r.data.length) { tb.appendChild(barisKosong(6, 'Tiada laporan dijumpai.')); return; }
+    if (!r.data.length) { tb.appendChild(barisKosong(7, 'Tiada laporan dijumpai.')); return; }
 
     r.data.forEach(rec => {
       const tr = document.createElement('tr');
       tr.appendChild(e_('td', '', tarikhDMY(rec.timestamp)));
+      const pj = PROFIL_JENIS[rec.jenis] || PROFIL_JENIS.KOKURIKULUM;
+      tr.appendChild(e_('td', 'text-xs text-slate-500', pj.nama));
       tr.appendChild(e_('td', 'font-semibold', rec.tajuk || '-'));
       tr.appendChild(e_('td', 'text-xs', rec.unit || '-'));
       const tdGuru = e_('td', 'text-xs', rec.nama || '-');
@@ -1415,7 +1703,7 @@ async function muatSenarai() {
       tr.appendChild(tdAksi);
       tb.appendChild(tr);
     });
-  } catch (err) { tb.textContent = ''; tb.appendChild(barisKosong(6, err.message)); }
+  } catch (err) { tb.textContent = ''; tb.appendChild(barisKosong(7, err.message)); }
 }
 
 function barisKosong(bil, teks) {
@@ -1479,8 +1767,15 @@ async function editLaporan(id) {
     const r = await api('BACA_LAPORAN', { id: id });
     const d = r.data;
     $('fId').value = d.id;
+    // Jenis dipakai DAHULU supaya label dan dropdown betul sebelum nilai diisi.
+    jenisDipilih = true;
+    pakaiJenis(d.jenis || 'KOKURIKULUM', { paksa: true, kekalUnit: true });
     $('fTajuk').value = d.tajuk; $('fUnit').value = d.unit; $('cariUnit').value = d.unit;
-    $('fAnjuran').value = d.anjuran; $('fPeringkat').value = d.peringkat; $('fKaedah').value = d.kaedah;
+    // Nilai lama mungkin sudah dibuang dari senarai dropdown — masukkan semula
+    // sebagai pilihan supaya rekod lama tidak hilang maklumat semasa diedit.
+    pilihAtauTambah('fAnjuran', d.anjuran);
+    pilihAtauTambah('fPeringkat', d.peringkat);
+    pilihAtauTambah('fKaedah', d.kaedah);
     $('fTarikh').value = d.tarikhProgram; $('fLelaki').value = d.jumLelaki; $('fPerempuan').value = d.jumPerempuan;
     $('fObjektif').value = d.objektif; $('fImprove').value = d.penambahbaikan;
     $('fRumusan').value = d.rumusan; $('fNama').value = d.nama;
@@ -1550,6 +1845,20 @@ async function muatDashboard() {
       const ic = document.createElement('i'); ic.className = 'fas ' + ikon + ' text-xl';
       kanan.appendChild(ic); k.appendChild(kanan);
       kad.appendChild(k);
+    });
+
+    // Taburan mengikut jenis laporan
+    const jalur = $('jalurJenis'); jalur.textContent = '';
+    const kiraJenis = s.jenis || {};
+    SENARAI_JENIS.forEach(kod => {
+      const p = PROFIL_JENIS[kod];
+      const bil = kiraJenis[kod] || 0;
+      const chip = e_('div', 'flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2');
+      const ic = document.createElement('i'); ic.className = 'fas ' + p.ikon + ' text-slate-400';
+      chip.appendChild(ic);
+      chip.appendChild(e_('span', 'text-xs font-semibold text-slate-600', p.nama));
+      chip.appendChild(e_('span', 'text-sm font-bold teks-w2', String(bil)));
+      jalur.appendChild(chip);
     });
 
     const warna = ['#0f766e', '#4f46e5', '#e11d48', '#d97706', '#059669', '#2563eb', '#db2777', '#7c3aed'];
@@ -1673,6 +1982,84 @@ function tunjukPautanLogo(slot, fileId, pautan) {
   n.appendChild(a);
   const kod = e_('span', 'block text-slate-300 truncate', 'ID: ' + fileId);
   n.appendChild(kod);
+}
+
+/* ------------------------------------------------- editor jenis laporan */
+function lukisEditorJenis() {
+  const bekas = $('kotakJenis'); if (!bekas) return;
+  bekas.textContent = '';
+
+  SENARAI_JENIS.forEach(kod => {
+    const p = PROFIL_JENIS[kod];
+    const t = tetapanJenis(kod);
+
+    const baris = e_('div', 'border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-12 gap-3 items-end');
+
+    // toggle aktif
+    const kotakAktif = e_('div', 'md:col-span-3');
+    const lab = e_('label', 'flex items-center gap-2 cursor-pointer');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.id = 'jn_aktif_' + kod; cb.checked = t.aktif;
+    cb.className = 'accent-teal-600 h-4 w-4';
+    lab.appendChild(cb);
+    const ic = document.createElement('i'); ic.className = 'fas ' + p.ikon + ' text-slate-400';
+    lab.appendChild(ic);
+    lab.appendChild(e_('span', 'text-sm font-bold', p.nama));
+    kotakAktif.appendChild(lab);
+    kotakAktif.appendChild(e_('p', 'text-[10px] text-slate-400 mt-1', p.nota));
+    baris.appendChild(kotakAktif);
+
+    const kotakTajuk = e_('div', 'md:col-span-5');
+    kotakTajuk.appendChild(e_('label', 'lbl', 'Tajuk dokumen dalam PDF'));
+    const inTajuk = document.createElement('input');
+    inTajuk.className = 'inp text-xs'; inTajuk.id = 'jn_tajuk_' + kod; inTajuk.value = t.tajuk;
+    kotakTajuk.appendChild(inTajuk);
+    baris.appendChild(kotakTajuk);
+
+    const kotakPenyemak = e_('div', 'md:col-span-4');
+    kotakPenyemak.appendChild(e_('label', 'lbl', 'Jawatan penyemak'));
+    const inPenyemak = document.createElement('input');
+    inPenyemak.className = 'inp text-xs'; inPenyemak.id = 'jn_penyemak_' + kod; inPenyemak.value = t.penyemak;
+    kotakPenyemak.appendChild(inPenyemak);
+    baris.appendChild(kotakPenyemak);
+
+    bekas.appendChild(baris);
+  });
+
+  const sel = $('cJENIS_DEFAULT');
+  sel.textContent = '';
+  SENARAI_JENIS.forEach(kod => {
+    const o = e_('option', '', PROFIL_JENIS[kod].nama); o.value = kod; sel.appendChild(o);
+  });
+  sel.value = CFG.jenisDefault || 'KOKURIKULUM';
+}
+
+async function simpanJenisTetapan() {
+  const tetapan = {};
+  SENARAI_JENIS.forEach(kod => {
+    tetapan[kod] = {
+      aktif:    $('jn_aktif_' + kod).checked,
+      tajuk:    $('jn_tajuk_' + kod).value.trim(),
+      penyemak: $('jn_penyemak_' + kod).value.trim()
+    };
+  });
+  if (!SENARAI_JENIS.some(k => tetapan[k].aktif)) {
+    return ralat('Sekurang-kurangnya satu jenis laporan mesti aktif.');
+  }
+  let lalai = $('cJENIS_DEFAULT').value;
+  if (!tetapan[lalai].aktif) {
+    lalai = SENARAI_JENIS.filter(k => tetapan[k].aktif)[0];
+    toast('info', 'Jenis lalai ditukar kepada ' + PROFIL_JENIS[lalai].nama + ' kerana pilihan asal tidak aktif.');
+  }
+
+  overlay(true, 'Menyimpan...');
+  try {
+    await api('SIMPAN_CONFIG', { config: { JENIS_TETAPAN: tetapan, JENIS_DEFAULT: lalai } });
+    CFG = await api('CONFIG_AWAM');
+    pakaiTema(CFG);
+    lukisEditorJenis();
+    overlay(false); toast('success', 'Tetapan jenis laporan disimpan.');
+  } catch (err) { overlay(false); ralat(err.message); }
 }
 
 function lukisEditorSenarai() {
