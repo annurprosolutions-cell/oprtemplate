@@ -709,7 +709,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
    ===================================================================== */
 
 /* >>> ISI URL WEB APP ANDA DI SINI (berakhir dengan /exec) <<< */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw784FJFS8ztQJc97XIW3nNgjTzI6aUrFBhTqyprimyz5_4-gX9YEzZ_WeViag-1qYL/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKYlq6MVJyLvrL9-HVPURAqc3czyHvxGpsGz9e3TYbOoSbUA1pSTfbsWs6g1a5XlWY/exec";
 
 // ---------------------------------------------------------------- state
 /* Akses storan pelayar dibungkus try/catch. Dalam mod privasi ketat, iframe
@@ -2003,8 +2003,12 @@ async function simpanTetapan() {
 
 /* Had saiz logo di backend (400KB). Disemak di sini juga supaya kita boleh
    mengecilkan imej dahulu dan bukan sekadar melontar ralat kepada admin. */
-const HAD_LOGO_BAIT = 400 * 1000;
-const TANGGA_LOGO   = [400, 320, 260, 200, 160];
+/* 150KB, bukan 400KB. Sebabnya bukan had backend (itu 400KB) tetapi kelajuan:
+   logo dihantar sebagai data URL dalam SETIAP muatan CONFIG_AWAM, dan base64
+   membengkakkan saiznya ~33%. Dua logo 400KB = lebih 1MB pada setiap muat turun.
+   360px sudah cukup tajam — logo dicetak lebih kurang 240px dalam PDF A4. */
+const HAD_LOGO_BAIT = 150 * 1000;
+const TANGGA_LOGO   = [360, 300, 240, 200, 160];
 
 /**
  * Sediakan logo untuk dimuat naik.
