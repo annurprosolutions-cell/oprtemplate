@@ -588,8 +588,15 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
           </div>
         </div>
         <p class="text-[11px] text-slate-400 leading-relaxed">
+          <b class="text-slate-500">Muat naik PNG jika logo anda berlatar lutsinar.</b>
+          Sistem mengekalkan format asal — PNG kekal PNG, WEBP kekal WEBP — jadi latar lutsinar
+          tidak bertukar menjadi kotak hitam dalam PDF. Hanya fail JPG yang dirata di atas latar putih.
+        </p>
+        <p class="text-[11px] text-slate-400 leading-relaxed">
           Logo dikecilkan automatik dalam pelayar (maks 400px, 400KB) sebelum disimpan ke dalam
           subfolder <b>Aset</b> di dalam folder Drive sistem yang sama dengan fail PDF laporan.
+          Jika fail PNG masih melebihi had selepas dikecilkan, dimensinya diturunkan lagi sebelum
+          sistem terpaksa menukarnya kepada JPG — dan anda akan diberitahu jika itu berlaku.
           ID failnya disimpan dalam tab <b>Config</b>, dan sistem menyuap imej itu terus ke dalam
           PDF — jadi logo sentiasa muncul tanpa isu CORS.
         </p>
@@ -702,7 +709,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
    ===================================================================== */
 
 /* >>> ISI URL WEB APP ANDA DI SINI (berakhir dengan /exec) <<< */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRlEtSN79c4n9xTwKnfoHM-xCtkSYs_-jRcyp1d-kiBy0nDF9bll9kwby5v2wv8tLL/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbnaMt5nfaQ6vyEhmbQhxqfQoKxAA04jrUwTTwcTml3H4Z1GIhm_nURSN5i4ZSNS55/exec";
 
 // ---------------------------------------------------------------- state
 /* Akses storan pelayar dibungkus try/catch. Dalam mod privasi ketat, iframe
@@ -1369,16 +1376,60 @@ function lukisGridGambar() {
 }
 
 // ---------------------------------------------------------------- lampiran
-function kecilkanImej(dataUrl, maksSisi, kualiti) {
+/** Baca jenis MIME dari kepala satu data URL. */
+function jenisDataUrl(dataUrl) {
+  const m = /^data:([^;,]+)/.exec(String(dataUrl || ''));
+  return m ? m[1].toLowerCase() : '';
+}
+
+/** Anggaran saiz sebenar (bait) bagi bahagian base64 sesuatu data URL. */
+function saizDataUrl(dataUrl) {
+  const b64 = String(dataUrl || '').split(',')[1] || '';
+  return Math.floor(b64.length * 3 / 4);
+}
+
+/**
+ * Kecilkan imej dalam pelayar.
+ *
+ * PENTING — kenapa format dikekalkan:
+ * Kanvas menyimpan kawasan lutsinar sebagai rgba(0,0,0,0). Bila ia dieksport
+ * sebagai JPEG, saluran alpha dibuang dan yang tinggal ialah HITAM. Itulah
+ * sebabnya logo PNG berlatar lutsinar dahulunya keluar dengan kotak hitam.
+ * Jadi:
+ *   - sumber PNG / WEBP  -> kekal PNG / WEBP, lutsinar terpelihara
+ *   - sumber lain (JPEG) -> kekal JPEG, tetapi kanvas dicat putih dahulu
+ *     supaya sebarang piksel lutsinar jadi putih, bukan hitam.
+ *
+ * pilihan.format : 'auto' (lalai) | 'image/png' | 'image/jpeg' | 'image/webp'
+ * pilihan.latar  : warna latar bila output tidak menyokong lutsinar
+ */
+function kecilkanImej(dataUrl, maksSisi, kualiti, pilihan) {
+  pilihan = pilihan || {};
   return new Promise((selesai) => {
     const img = new Image();
     img.onload = () => {
       let { width: w, height: h } = img;
       const skala = Math.min(1, maksSisi / Math.max(w, h));
-      w = Math.round(w * skala); h = Math.round(h * skala);
+      w = Math.max(1, Math.round(w * skala)); h = Math.max(1, Math.round(h * skala));
+
+      const asal = jenisDataUrl(dataUrl);
+      let keluar = pilihan.format || 'auto';
+      if (keluar === 'auto') {
+        keluar = (asal === 'image/png' || asal === 'image/webp') ? asal : 'image/jpeg';
+      }
+      const adaAlpha = (keluar === 'image/png' || keluar === 'image/webp');
+
       const c = document.createElement('canvas'); c.width = w; c.height = h;
-      c.getContext('2d').drawImage(img, 0, 0, w, h);
-      selesai(c.toDataURL('image/jpeg', kualiti || 0.82));
+      const ctx = c.getContext('2d');
+      if (!adaAlpha) {                       // JPEG tiada alpha — cat latar dahulu
+        ctx.fillStyle = pilihan.latar || '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+      }
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // PNG mengabaikan parameter kualiti; hantar undefined supaya jelas.
+      selesai(keluar === 'image/png' ? c.toDataURL('image/png')
+                                     : c.toDataURL(keluar, kualiti || 0.82));
     };
     img.onerror = () => selesai(dataUrl);
     img.src = dataUrl;
@@ -1400,7 +1451,11 @@ async function tambahFail() {
       if (fail.type === 'application/pdf') {
         await lampirPdf(ev.target.result, fail.name);
       } else if (/^image\//.test(fail.type)) {
-        const kecil = await kecilkanImej(ev.target.result, 1400, 0.82);
+        // Gambar bukti dikekalkan sebagai JPEG kerana saiznya jauh lebih kecil,
+        // tetapi kanvas dicat PUTIH dahulu supaya PNG berlatar lutsinar tidak
+        // keluar berlatar hitam dalam PDF.
+        const kecil = await kecilkanImej(ev.target.result, 1400, 0.82,
+          { format: 'image/jpeg', latar: '#ffffff' });
         imejBukti.push({ nama: fail.name, dataUrl: kecil, keterangan: keterangan });
       } else {
         overlay(false); return ralat('Hanya gambar dan PDF dibenarkan.');
@@ -1946,22 +2001,62 @@ async function simpanTetapan() {
   } catch (err) { overlay(false); ralat(err.message); }
 }
 
+/* Had saiz logo di backend (400KB). Disemak di sini juga supaya kita boleh
+   mengecilkan imej dahulu dan bukan sekadar melontar ralat kepada admin. */
+const HAD_LOGO_BAIT = 400 * 1000;
+const TANGGA_LOGO   = [400, 320, 260, 200, 160];
+
+/**
+ * Sediakan logo untuk dimuat naik.
+ * PNG dan WEBP dikekalkan formatnya supaya latar lutsinar tidak bertukar hitam.
+ * Jika fail PNG terlalu besar, dimensinya diturunkan dahulu — format hanya
+ * ditukar kepada JPEG sebagai jalan terakhir, dan admin diberitahu.
+ */
+async function sediakanLogo(dataUrl) {
+  const asal = jenisDataUrl(dataUrl);
+  const kekalFormat = (asal === 'image/png' || asal === 'image/webp');
+
+  for (let i = 0; i < TANGGA_LOGO.length; i++) {
+    const hasil = await kecilkanImej(dataUrl, TANGGA_LOGO[i], 0.92,
+      { format: kekalFormat ? asal : 'image/jpeg' });
+    if (saizDataUrl(hasil) <= HAD_LOGO_BAIT) {
+      return { dataUrl: hasil, mimeType: jenisDataUrl(hasil) || asal || 'image/png', ditukar: false };
+    }
+  }
+
+  // Masih terlalu besar walaupun 160px — biasanya PNG foto, bukan logo grafik.
+  const ganti = await kecilkanImej(dataUrl, 320, 0.85, { format: 'image/jpeg', latar: '#ffffff' });
+  return { dataUrl: ganti, mimeType: 'image/jpeg', ditukar: kekalFormat };
+}
+
 async function muatNaikLogo(slot) {
   const inp = $('failLogo' + slot);
   if (!inp.files || !inp.files[0]) return toast('warning', 'Sila pilih fail imej.');
   const fail = inp.files[0];
+  if (!/^image\/(png|jpeg|webp)$/.test(fail.type || '')) {
+    return ralat('Format logo mesti PNG, JPG atau WEBP. Guna PNG jika logo anda berlatar lutsinar.');
+  }
   overlay(true, 'Memuat naik logo...');
   const baca = new FileReader();
   baca.onload = async (ev) => {
     try {
-      const kecil = await kecilkanImej(ev.target.result, 400, 0.9);
-      const hasil = await api('MUAT_NAIK_LOGO', { slot: String(slot), base64: kecil.split(',')[1], mimeType: 'image/jpeg' });
+      const siap = await sediakanLogo(ev.target.result);
+      const hasil = await api('MUAT_NAIK_LOGO', {
+        slot: String(slot),
+        base64: siap.dataUrl.split(',')[1],
+        mimeType: siap.mimeType
+      });
       const baru = await api('CONFIG_AWAM');
       CFG = baru; pakaiTema(baru); lukisPratonton();
       $('pratontonLogo' + slot).src = slot === 1 ? baru.logo1 : baru.logo2;
       tunjukPautanLogo(slot, hasil.fileId, hasil.pautanDrive);
       inp.value = '';
-      overlay(false); toast('success', 'Logo disimpan dalam Drive dan terus dipakai dalam PDF.');
+      overlay(false);
+      if (siap.ditukar) {
+        toast('warning', 'Fail terlalu besar untuk dikekalkan sebagai PNG — ia ditukar kepada JPG berlatar putih. Guna fail PNG yang lebih kecil untuk kekalkan latar lutsinar.');
+      } else {
+        toast('success', 'Logo disimpan sebagai ' + siap.mimeType.replace('image/', '').toUpperCase() + ' dan terus dipakai dalam PDF.');
+      }
     } catch (err) { overlay(false); ralat(err.message); }
   };
   baca.readAsDataURL(fail);
