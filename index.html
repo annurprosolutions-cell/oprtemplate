@@ -109,6 +109,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
 
 /* --- Bahagian lain dokumen --- */
 .pv-grid{display:grid;gap:6px;}
+.pv-1{grid-template-columns:minmax(0,1fr);}
 .pv-2{grid-template-columns:repeat(2,minmax(0,1fr));}
 .pv-3{grid-template-columns:repeat(3,minmax(0,1fr));}
 .pv-4{grid-template-columns:repeat(4,minmax(0,1fr));}
@@ -117,7 +118,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
 .pv-kecil{font-size:.78rem;}
 .pv-tebal{font-weight:700;}
 .pv-kaki{border-top:2px solid #cbd5e1;padding-top:10px;}
-.pv-tandatangan{gap:24px;margin-bottom:10px;}
+.pv-tandatangan{gap:20px;margin-bottom:10px;}
 .pv-garis{border-bottom:1px solid #94a3b8;margin-top:22px;}
 .pv-nota{font-size:9px;color:#64748b;margin-top:3px;}
 .pv-baris-kaki{display:flex;justify-content:space-between;font-size:9.5px;color:#64748b;}
@@ -349,7 +350,48 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
             <div><label class="lbl text-rose-600" id="lblKaedah">Kaedah Pelaksanaan</label><select id="fKaedah" class="inp" onchange="lukisPratonton()"></select></div>
             <div><label class="lbl text-emerald-600" id="lblImprove">Penambahbaikan</label><textarea id="fImprove" rows="2" class="inp" oninput="lukisPratonton()"></textarea></div>
             <div><label class="lbl text-amber-600" id="lblRumusan">Rumusan</label><textarea id="fRumusan" rows="2" class="inp" oninput="lukisPratonton()"></textarea></div>
-            <div><label class="lbl">Disediakan Oleh</label><input id="fNama" class="inp" oninput="lukisPratonton()"></div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-3">
+              <p class="lbl mb-0">Pegawai Pelapor &amp; Pengesahan</p>
+              <p class="text-[10px] text-slate-400 -mt-1 leading-relaxed">
+                Tanda hanya ruang tandatangan yang laporan ini perlukan. Yang tidak ditanda
+                tidak akan muncul dalam PDF.
+              </p>
+
+              <div>
+                <label class="flex items-center gap-2 cursor-pointer mb-1">
+                  <input type="checkbox" id="tSedia" class="accent-teal-600 h-4 w-4" checked
+                         onchange="tandaSentuh('slot');lukisPratonton()">
+                  <span class="text-xs font-bold text-slate-600">Disediakan Oleh</span>
+                </label>
+                <input id="fNama" class="inp text-xs" oninput="tandaSentuh('fNama');lukisPratonton()"
+                       placeholder="Nama guru penyedia">
+              </div>
+
+              <div>
+                <label class="flex items-center gap-2 cursor-pointer mb-1">
+                  <input type="checkbox" id="tSemak" class="accent-teal-600 h-4 w-4" checked
+                         onchange="tandaSentuh('slot');lukisPratonton()">
+                  <span class="text-xs font-bold text-slate-600">Disemak Oleh</span>
+                </label>
+                <input id="fPenyemak" class="inp text-xs" oninput="tandaSentuh('fPenyemak');lukisPratonton()"
+                       placeholder="Jawatan / nama penyemak">
+              </div>
+
+              <div>
+                <label class="flex items-center gap-2 cursor-pointer mb-1">
+                  <input type="checkbox" id="tSah" class="accent-teal-600 h-4 w-4"
+                         onchange="tandaSentuh('slot');lukisPratonton()">
+                  <span class="text-xs font-bold text-slate-600">Disahkan Oleh</span>
+                </label>
+                <input id="fPengesah" class="inp text-xs" oninput="tandaSentuh('fPengesah');lukisPratonton()"
+                       placeholder="Jawatan / nama pengesah">
+              </div>
+
+              <button type="button" onclick="pulihJawatanLalai()"
+                      class="text-[11px] text-slate-400 hover:text-slate-600 underline">
+                Kembalikan jawatan lalai sistem
+              </button>
+            </div>
           </form>
           <button onclick="resetBorang()" class="mt-4 w-full text-slate-400 text-xs hover:text-slate-600 underline">Reset borang</button>
         </div>
@@ -435,20 +477,9 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
             </div>
 
             <div class="pv-kaki" id="kakiSatu">
-              <div class="pv-grid pv-2 pv-tandatangan">
-                <div>
-                  <div class="lbl">Disediakan Oleh</div>
-                  <div class="val pv-kecil pv-tebal" id="pvNama">-</div>
-                  <div class="pv-garis"></div>
-                  <div class="pv-nota">Tandatangan &amp; Tarikh</div>
-                </div>
-                <div>
-                  <div class="lbl">Disemak Oleh</div>
-                  <div class="val pv-kecil pv-tebal" id="pvPenyemak">-</div>
-                  <div class="pv-garis"></div>
-                  <div class="pv-nota">Tandatangan &amp; Tarikh</div>
-                </div>
-              </div>
+              <!-- Ruang tandatangan dibina secara dinamik: hanya slot yang
+                   ditanda oleh guru akan muncul, dan bilangan lajur mengikutnya. -->
+              <div class="pv-grid pv-tandatangan" id="pvTandatangan"></div>
               <div class="pv-baris-kaki">
                 <div id="pvFooter"></div>
                 <div id="pvTarikhCetak"></div>
@@ -556,7 +587,8 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
           <div class="md:col-span-2"><label class="lbl">Moto Sekolah (pilihan)</label>
             <input id="cMOTO" class="inp" placeholder="Our Team, One Vision, Merchuan Excellent"></div>
           <div><label class="lbl">Nama Pengetua</label><input id="cNAMA_PENGETUA" class="inp"></div>
-          <div><label class="lbl">Jawatan Penyemak</label><input id="cJAWATAN_PENYEMAK" class="inp"></div>
+          <div><label class="lbl">Jawatan Penyemak (lalai)</label><input id="cJAWATAN_PENYEMAK" class="inp"></div>
+          <div><label class="lbl">Jawatan Pengesah (lalai)</label><input id="cJAWATAN_PENGESAH" class="inp" placeholder="Pengetua"></div>
           <div><label class="lbl">Teks Kaki PDF (hak cipta)</label>
             <input id="cFOOTER_PDF" class="inp" placeholder="© All Rights Reserved by SMK ..."></div>
           <div><label class="lbl">Prefix Nama Fail PDF</label><input id="cPREFIX_FAIL" class="inp"></div>
@@ -709,7 +741,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
    ===================================================================== */
 
 /* >>> ISI URL WEB APP ANDA DI SINI (berakhir dengan /exec) <<< */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKYlq6MVJyLvrL9-HVPURAqc3czyHvxGpsGz9e3TYbOoSbUA1pSTfbsWs6g1a5XlWY/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6hKvxjY-ekxmAWsdIRGrwdilyV-oB1kMza-jaVYUqzIkqIkKgxOu9XNR2JBa_1P_9/exec";
 
 // ---------------------------------------------------------------- state
 /* Akses storan pelayar dibungkus try/catch. Dalam mod privasi ketat, iframe
@@ -826,14 +858,51 @@ let JENIS_SEMASA  = 'KOKURIKULUM';
 let jenisDipilih  = false;   // true selepas guru menekan butang jenis sendiri
 
 /** Tetapan per-jenis dari admin (aktif / tajuk dokumen / jawatan penyemak). */
+/* Kod slot ruang tandatangan. Satu laporan boleh guna mana-mana kombinasi. */
+const SLOT_TTD = [
+  { kod: 'SEDIA', label: 'Disediakan Oleh', kotak: 'tSedia', medan: 'fNama' },
+  { kod: 'SEMAK', label: 'Disemak Oleh',    kotak: 'tSemak', medan: 'fPenyemak' },
+  { kod: 'SAH',   label: 'Disahkan Oleh',   kotak: 'tSah',   medan: 'fPengesah' }
+];
+
+/* Medan yang guru sudah ubah sendiri. Nilai lalai sistem tidak akan menimpanya
+   bila jenis laporan ditukar. */
+let medanDisentuh = new Set();
+function tandaSentuh(id) { medanDisentuh.add(id); }
+
 function tetapanJenis(kod) {
   const dari = (CFG.jenis || {})[kod] || {};
   const p = PROFIL_JENIS[kod] || PROFIL_JENIS.KOKURIKULUM;
+  let slot = dari.slot;
+  if (typeof slot === 'string') slot = slot.split(',');
+  if (!Array.isArray(slot) || !slot.length) slot = ['SEDIA', 'SEMAK'];
+  slot = slot.map(x => String(x).trim().toUpperCase())
+             .filter(x => SLOT_TTD.some(sl => sl.kod === x));
   return {
     aktif:    dari.aktif !== false,
     tajuk:    dari.tajuk    || ('Laporan ' + p.nama),
-    penyemak: dari.penyemak || CFG.jawatanPenyemak || '-'
+    penyemak: dari.penyemak || CFG.jawatanPenyemak || '',
+    pengesah: dari.pengesah || CFG.jawatanPengesah || 'Pengetua',
+    slot:     slot
   };
+}
+
+/** Kembalikan jawatan penyemak/pengesah kepada tetapan sistem bagi jenis semasa. */
+function pulihJawatanLalai() {
+  const t = tetapanJenis(JENIS_SEMASA);
+  $('fPenyemak').value = t.penyemak;
+  $('fPengesah').value = t.pengesah;
+  SLOT_TTD.forEach(sl => { $(sl.kotak).checked = t.slot.indexOf(sl.kod) !== -1; });
+  medanDisentuh.delete('fPenyemak');
+  medanDisentuh.delete('fPengesah');
+  medanDisentuh.delete('slot');
+  lukisPratonton();
+  toast('success', 'Jawatan dan ruang tandatangan dikembalikan kepada tetapan sistem.');
+}
+
+/** Senarai slot yang ditanda oleh guru, ikut susunan tetap. */
+function slotDipilih() {
+  return SLOT_TTD.filter(sl => $(sl.kotak) && $(sl.kotak).checked);
 }
 
 function jenisAktif() {
@@ -1240,9 +1309,16 @@ function pakaiJenis(kod, opsyen) {
   $('fTajuk').placeholder = p.petunjukTajuk;
   $('cariUnit').placeholder = p.petunjukUnit;
 
-  // Baris jenis + jawatan penyemak dalam PDF
+  // Baris jenis dalam PDF
   setTeks('pvJenis', t.tajuk);
-  setTeks('pvPenyemak', t.penyemak);
+
+  // Jawatan penyemak/pengesah ikut tetapan sistem bagi jenis ini — kecuali
+  // guru sudah menaip sendiri, maka taipannya dikekalkan.
+  if (!medanDisentuh.has('fPenyemak')) $('fPenyemak').value = t.penyemak;
+  if (!medanDisentuh.has('fPengesah')) $('fPengesah').value = t.pengesah;
+  if (!medanDisentuh.has('slot')) {
+    SLOT_TTD.forEach(sl => { $(sl.kotak).checked = t.slot.indexOf(sl.kod) !== -1; });
+  }
 
   document.querySelectorAll('#pilihJenis .jenis-btn').forEach(b => {
     b.classList.toggle('aktif', b.dataset.jenis === kod);
@@ -1332,7 +1408,7 @@ function lukisPratonton() {
   isi('pvKaedah', g('fKaedah'));
   isi('pvImprove', g('fImprove'));
   isi('pvRumusan', g('fRumusan'));
-  isi('pvNama', g('fNama'));
+  // Nama penyedia dipapar melalui blok tandatangan dinamik (lukisTandatangan).
 
   const footer = CFG.footerPdf || ('\u00A9 ' + (CFG.namaSekolah || ''));
   $('pvFooter').textContent = footer;
@@ -1340,7 +1416,33 @@ function lukisPratonton() {
   $('pvNama2').textContent = g('fNama') || '-';
   $('pvTarikhCetak').textContent = 'Dijana: ' + tarikhDMY(new Date());
 
+  lukisTandatangan();
   lukisGridGambar();
+}
+
+/**
+ * Bina ruang tandatangan mengikut slot yang ditanda sahaja.
+ * Bilangan lajur mengikut bilangan slot supaya susun aturnya kekal seimbang
+ * sama ada satu, dua atau tiga ruang digunakan.
+ */
+function lukisTandatangan() {
+  const bekas = $('pvTandatangan'); if (!bekas) return;
+  bekas.textContent = '';
+  const dipilih = slotDipilih();
+
+  bekas.className = 'pv-grid pv-tandatangan pv-' + (dipilih.length || 1);
+  // Tiada slot ditanda — blok tandatangan hilang sepenuhnya dari PDF.
+  bekas.style.display = dipilih.length ? '' : 'none';
+
+  dipilih.forEach(sl => {
+    const kotak = document.createElement('div');
+    kotak.appendChild(e_('div', 'lbl', sl.label));
+    const nilai = String($(sl.medan).value || '').trim();
+    kotak.appendChild(e_('div', 'val pv-kecil pv-tebal', nilai || '-'));
+    kotak.appendChild(e_('div', 'pv-garis'));
+    kotak.appendChild(e_('div', 'pv-nota', 'Tandatangan & Tarikh'));
+    bekas.appendChild(kotak);
+  });
 }
 
 /**
@@ -1579,7 +1681,7 @@ const SEMAKAN_LENGKAP = [
   { id: 'fKaedah',    kunci: 'Kaedah' },
   { id: 'fImprove',   kunci: 'Improve' },
   { id: 'fRumusan',   kunci: 'Rumusan' },
-  { id: 'fNama',      label: 'Disediakan Oleh' }
+  // 'Disediakan Oleh' disemak melalui slot tandatangan, bukan di sini.
 ];
 
 function medanKosong() {
@@ -1587,6 +1689,11 @@ function medanKosong() {
   const senarai = SEMAKAN_LENGKAP
     .filter(m => !String($(m.id).value || '').trim())
     .map(m => m.label || p.label[m.kunci] || m.kunci);
+
+  // Ruang tandatangan yang ditanda tetapi namanya kosong.
+  slotDipilih().forEach(sl => {
+    if (!String($(sl.medan).value || '').trim()) senarai.push(sl.label);
+  });
   const l = Number($('fLelaki').value) || 0;
   const pr = Number($('fPerempuan').value) || 0;
   if (l + pr === 0) senarai.push('Bilangan ' + p.label.Lelaki.split(' ')[0].toLowerCase() + ' yang terlibat');
@@ -1676,6 +1783,8 @@ async function hantarLaporan(status) {
       })),
       data: {
         jenis: $('fJenis').value,
+        penyemak: $('fPenyemak').value, pengesah: $('fPengesah').value,
+        slotTtd: slotDipilih().map(sl => sl.kod).join(','),
         nama: $('fNama').value, tajuk: $('fTajuk').value, unit: $('fUnit').value,
         anjuran: $('fAnjuran').value, peringkat: $('fPeringkat').value,
         tarikhProgram: $('fTarikh').value, jumLelaki: $('fLelaki').value,
@@ -1702,7 +1811,8 @@ function blobKeBase64(blob) {
 
 function resetBorang() {
   ['fId', 'fTajuk', 'fUnit', 'cariUnit', 'fTarikh', 'fLelaki', 'fPerempuan',
-   'fObjektif', 'fImprove', 'fRumusan'].forEach(id => { $(id).value = ''; });
+   'fObjektif', 'fImprove', 'fRumusan', 'fPenyemak', 'fPengesah'].forEach(id => { $(id).value = ''; });
+  medanDisentuh = new Set();
   ['fAnjuran', 'fPeringkat', 'fKaedah'].forEach(id => { $(id).selectedIndex = 0; });
   $('fNama').value = SESI ? SESI.nama : '';
   $('fConsent').checked = false;
@@ -1834,6 +1944,17 @@ async function editLaporan(id) {
     $('fTarikh').value = d.tarikhProgram; $('fLelaki').value = d.jumLelaki; $('fPerempuan').value = d.jumPerempuan;
     $('fObjektif').value = d.objektif; $('fImprove').value = d.penambahbaikan;
     $('fRumusan').value = d.rumusan; $('fNama').value = d.nama;
+
+    // Ruang tandatangan rekod ini dipulihkan seperti asal — bukan tetapan
+    // semasa sistem — supaya laporan lama tidak berubah bila dijana semula.
+    const t = tetapanJenis(d.jenis || JENIS_SEMASA);
+    $('fPenyemak').value = d.penyemak || t.penyemak;
+    $('fPengesah').value = d.pengesah || t.pengesah;
+    const slotRekod = String(d.slotTtd || '').split(',').map(x => x.trim()).filter(Boolean);
+    const guna = slotRekod.length ? slotRekod : t.slot;
+    SLOT_TTD.forEach(sl => { $(sl.kotak).checked = guna.indexOf(sl.kod) !== -1; });
+    ['fPenyemak', 'fPengesah', 'slot'].forEach(k => medanDisentuh.add(k));
+
     $('fConsent').checked = true;
     imejBukti = []; pdfHalaman = [];
 
@@ -1971,7 +2092,7 @@ async function eksportCsv() {
 const KUNCI_CONFIG = [
   'NAMA_SEKOLAH', 'ALAMAT_SEKOLAH', 'NAMA_SISTEM', 'SINGKATAN', 'TAJUK_DOKUMEN',
   'TELEFON', 'FAKS', 'MOTO', 'NAMA_PENGETUA', 'JAWATAN_PENYEMAK', 'FOOTER_PDF',
-  'PREFIX_FAIL', 'TAHUN_SESI', 'WARNA_1', 'WARNA_2', 'WARNA_AKSEN',
+  'PREFIX_FAIL', 'TAHUN_SESI', 'JAWATAN_PENGESAH', 'WARNA_1', 'WARNA_2', 'WARNA_AKSEN',
   'CONSENT_TEXT', 'RETENTION_BULAN', 'SESSION_TTL_JAM', 'MAX_UPLOAD_MB',
   'PDF_AKSES', 'FOLDER_ID'
 ];
@@ -2115,12 +2236,38 @@ function lukisEditorJenis() {
     kotakTajuk.appendChild(inTajuk);
     baris.appendChild(kotakTajuk);
 
-    const kotakPenyemak = e_('div', 'md:col-span-4');
+    const kotakPenyemak = e_('div', 'md:col-span-2');
     kotakPenyemak.appendChild(e_('label', 'lbl', 'Jawatan penyemak'));
     const inPenyemak = document.createElement('input');
     inPenyemak.className = 'inp text-xs'; inPenyemak.id = 'jn_penyemak_' + kod; inPenyemak.value = t.penyemak;
     kotakPenyemak.appendChild(inPenyemak);
     baris.appendChild(kotakPenyemak);
+
+    const kotakPengesah = e_('div', 'md:col-span-2');
+    kotakPengesah.appendChild(e_('label', 'lbl', 'Jawatan pengesah'));
+    const inPengesah = document.createElement('input');
+    inPengesah.className = 'inp text-xs'; inPengesah.id = 'jn_pengesah_' + kod; inPengesah.value = t.pengesah;
+    kotakPengesah.appendChild(inPengesah);
+    baris.appendChild(kotakPengesah);
+
+    // Ruang tandatangan yang dihidupkan secara lalai bagi jenis ini.
+    const kotakSlot = e_('div', 'md:col-span-12 pt-1 border-t border-slate-100');
+    kotakSlot.appendChild(e_('label', 'lbl', 'Ruang tandatangan lalai'));
+    const barisSlot = e_('div', 'flex flex-wrap gap-4 mt-1');
+    SLOT_TTD.forEach(sl => {
+      const lab = e_('label', 'flex items-center gap-1.5 cursor-pointer');
+      const cbs = document.createElement('input');
+      cbs.type = 'checkbox'; cbs.id = 'jn_slot_' + kod + '_' + sl.kod;
+      cbs.className = 'accent-teal-600 h-3.5 w-3.5';
+      cbs.checked = t.slot.indexOf(sl.kod) !== -1;
+      lab.appendChild(cbs);
+      lab.appendChild(e_('span', 'text-[11px] text-slate-600', sl.label));
+      barisSlot.appendChild(lab);
+    });
+    kotakSlot.appendChild(barisSlot);
+    kotakSlot.appendChild(e_('p', 'text-[10px] text-slate-400 mt-1',
+      'Guru masih boleh tanda atau buang mana-mana ruang ini pada setiap laporan.'));
+    baris.appendChild(kotakSlot);
 
     bekas.appendChild(baris);
   });
@@ -2139,7 +2286,10 @@ async function simpanJenisTetapan() {
     tetapan[kod] = {
       aktif:    $('jn_aktif_' + kod).checked,
       tajuk:    $('jn_tajuk_' + kod).value.trim(),
-      penyemak: $('jn_penyemak_' + kod).value.trim()
+      penyemak: $('jn_penyemak_' + kod).value.trim(),
+      pengesah: $('jn_pengesah_' + kod).value.trim(),
+      slot:     SLOT_TTD.filter(sl => $('jn_slot_' + kod + '_' + sl.kod).checked)
+                        .map(sl => sl.kod).join(',')
     };
   });
   if (!SENARAI_JENIS.some(k => tetapan[k].aktif)) {
@@ -2155,6 +2305,9 @@ async function simpanJenisTetapan() {
   try {
     await api('SIMPAN_CONFIG', { config: { JENIS_TETAPAN: tetapan, JENIS_DEFAULT: lalai } });
     CFG = await api('CONFIG_AWAM');
+    medanDisentuh.delete('fPenyemak');
+    medanDisentuh.delete('fPengesah');
+    medanDisentuh.delete('slot');
     pakaiTema(CFG);
     lukisEditorJenis();
     overlay(false); toast('success', 'Tetapan jenis laporan disimpan.');
