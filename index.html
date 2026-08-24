@@ -100,6 +100,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
   border:1px solid rgba(0,0,0,.05);border-left:5px solid var(--w1);}
 .kotak.rose{border-left-color:#e11d48;} .kotak.indigo{border-left-color:#4f46e5;}
 .kotak.amber{border-left-color:#d97706;} .kotak.emerald{border-left-color:#059669;}
+.kotak.sky{border-left-color:#0284c7;} .kotak.teal{border-left-color:#0d9488;}
 
 /* --- KEPALA PENUH: muka 1 sahaja ---
    Logo bersebelahan di kiri, blok teks di kanan (rata kiri). */
@@ -397,6 +398,12 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
               <div><label class="text-xs text-slate-500" id="lblTarikh">Tarikh Pelaksanaan</label>
                 <input type="date" id="fTarikh" class="inp text-xs" onchange="lukisPratonton()"></div>
               <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-xs text-slate-500" id="lblMasa">Masa</label>
+                  <input type="time" id="fMasa" class="inp text-xs" onchange="lukisPratonton()"></div>
+                <div><label class="text-xs text-slate-500" id="lblTempat">Tempat</label>
+                  <input id="fTempat" class="inp text-xs" oninput="lukisPratonton()" placeholder="Contoh: Dewan Sekolah"></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
                 <div><label class="text-xs text-slate-500" id="lblLelaki">Murid Lelaki</label>
                   <input type="number" min="0" id="fLelaki" class="inp text-xs" oninput="lukisPratonton()" placeholder="0"></div>
                 <div><label class="text-xs text-slate-500" id="lblPerempuan">Murid Perempuan</label>
@@ -405,7 +412,9 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
             </div>
 
             <div><label class="lbl" id="lblObjektif">Objektif</label><textarea id="fObjektif" rows="3" class="inp" oninput="lukisPratonton()"></textarea></div>
+            <div><label class="lbl text-sky-600" id="lblUcapan">Ucapan / Nota Tambahan</label><textarea id="fUcapan" rows="2" class="inp" oninput="lukisPratonton()"></textarea></div>
             <div><label class="lbl text-rose-600" id="lblKaedah">Kaedah Pelaksanaan</label><select id="fKaedah" class="inp" onchange="lukisPratonton()"></select></div>
+            <div><label class="lbl text-teal-600" id="lblKekuatan">Kekuatan Program</label><textarea id="fKekuatan" rows="2" class="inp" oninput="lukisPratonton()"></textarea></div>
             <div><label class="lbl text-emerald-600" id="lblImprove">Penambahbaikan</label><textarea id="fImprove" rows="2" class="inp" oninput="lukisPratonton()"></textarea></div>
             <div><label class="lbl text-amber-600" id="lblRumusan">Rumusan</label><textarea id="fRumusan" rows="2" class="inp" oninput="lukisPratonton()"></textarea></div>
             <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-3">
@@ -547,6 +556,11 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
                 <div class="kotak indigo"><div class="lbl" id="pvLblPeringkat">Peringkat</div><div class="val pv-kecil" id="pvPeringkat">-</div></div>
               </div>
 
+              <div class="pv-grid pv-2 pv-sela">
+                <div class="kotak indigo"><div class="lbl" id="pvLblMasa">Masa</div><div class="val pv-kecil" id="pvMasa">-</div></div>
+                <div class="kotak indigo"><div class="lbl" id="pvLblTempat">Tempat</div><div class="val pv-kecil" id="pvTempat">-</div></div>
+              </div>
+
               <div class="pv-grid pv-4 pv-sela">
                 <div class="kotak emerald"><div class="lbl" id="pvLblTarikh">Tarikh</div><div class="val pv-kecil" id="pvTarikh">-</div></div>
                 <div class="kotak emerald"><div class="lbl" id="pvLblLelaki">Murid Lelaki</div><div class="val pv-kecil" id="pvLelaki">0</div></div>
@@ -555,7 +569,9 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
               </div>
 
               <div class="kotak pv-sela"><div class="lbl" id="pvLblObjektif">Objektif</div><div class="val" id="pvObjektif">-</div></div>
+              <div class="kotak sky pv-sela"><div class="lbl" id="pvLblUcapan">Ucapan / Nota Tambahan</div><div class="val" id="pvUcapan">-</div></div>
               <div class="kotak rose pv-sela"><div class="lbl" id="pvLblKaedah">Kaedah Pelaksanaan</div><div class="val" id="pvKaedah">-</div></div>
+              <div class="kotak teal pv-sela"><div class="lbl" id="pvLblKekuatan">Kekuatan Program</div><div class="val" id="pvKekuatan">-</div></div>
               <div class="kotak emerald pv-sela"><div class="lbl" id="pvLblImprove">Penambahbaikan</div><div class="val" id="pvImprove">-</div></div>
               <div class="kotak amber pv-sela"><div class="lbl" id="pvLblRumusan">Rumusan</div><div class="val" id="pvRumusan">-</div></div>
             </div>
@@ -897,7 +913,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
    ===================================================================== */
 
 /* >>> ISI URL WEB APP ANDA DI SINI (berakhir dengan /exec) <<< */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyN8GO_C6q0Vi7bSgzLS62_y9QdR0sZjIxo_kd6obQmSKXmL2qx_Y9sJdH_J1gy2v7f/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwDJ5l-FAHG6muds13PVabxUzX0RuxuA1-hWUVtY8_g8_5yEJHLgiyOpBiLvq8Pi56B/exec";
 
 // ---------------------------------------------------------------- state
 /* Akses storan pelayar dibungkus try/catch. Dalam mod privasi ketat, iframe
@@ -935,7 +951,8 @@ const LABEL_SENARAI = {
   UNIT_HEM:     'Unit HEM',
   ANJURAN:      'Anjuran',
   PERINGKAT:    'Peringkat Pelibatan',
-  KAEDAH:       'Kaedah Pelaksanaan'
+  KAEDAH:       'Kaedah Pelaksanaan',
+  MINGGU_BERTUGAS: 'Minggu Bertugas'
 };
 
 /* =====================================================================
@@ -962,7 +979,9 @@ const PROFIL_JENIS = {
       Anjuran: 'Anjuran', Peringkat: 'Peringkat', Perincian: 'Perincian Program',
       Tarikh: 'Tarikh Pelaksanaan', Lelaki: 'Murid Lelaki', Perempuan: 'Murid Perempuan',
       Objektif: 'Objektif', Kaedah: 'Kaedah Pelaksanaan',
-      Improve: 'Penambahbaikan', Rumusan: 'Rumusan'
+      Improve: 'Penambahbaikan', Rumusan: 'Rumusan',
+      Masa: 'Masa', Tempat: 'Tempat', Kekuatan: 'Kekuatan Program',
+      Ucapan: 'Ucapan / Nota Tambahan'
     }
   },
   KELAS: {
@@ -977,7 +996,9 @@ const PROFIL_JENIS = {
       Anjuran: 'Anjuran', Peringkat: 'Peringkat', Perincian: 'Perincian Aktiviti',
       Tarikh: 'Tarikh Aktiviti', Lelaki: 'Murid Lelaki', Perempuan: 'Murid Perempuan',
       Objektif: 'Objektif Aktiviti', Kaedah: 'Kaedah Pelaksanaan',
-      Improve: 'Penambahbaikan', Rumusan: 'Rumusan & Impak'
+      Improve: 'Penambahbaikan', Rumusan: 'Rumusan & Impak',
+      Masa: 'Masa', Tempat: 'Tempat', Kekuatan: 'Kekuatan Program',
+      Ucapan: 'Ucapan / Nota Tambahan'
     }
   },
   EVENT: {
@@ -992,7 +1013,9 @@ const PROFIL_JENIS = {
       Anjuran: 'Penganjur', Peringkat: 'Peringkat', Perincian: 'Perincian Event',
       Tarikh: 'Tarikh Event', Lelaki: 'Peserta Lelaki', Perempuan: 'Peserta Perempuan',
       Objektif: 'Objektif Event', Kaedah: 'Kaedah Pelaksanaan',
-      Improve: 'Penambahbaikan', Rumusan: 'Rumusan & Impak'
+      Improve: 'Penambahbaikan', Rumusan: 'Rumusan & Impak',
+      Masa: 'Masa', Tempat: 'Tempat', Kekuatan: 'Kekuatan Program',
+      Ucapan: 'Ucapan Bertema'
     }
   },
   AKADEMIK: {
@@ -1007,7 +1030,9 @@ const PROFIL_JENIS = {
       Anjuran: 'Anjuran', Peringkat: 'Peringkat', Perincian: 'Perincian Program',
       Tarikh: 'Tarikh Pelaksanaan', Lelaki: 'Murid Lelaki', Perempuan: 'Murid Perempuan',
       Objektif: 'Objektif Akademik', Kaedah: 'Kaedah Pelaksanaan',
-      Improve: 'Penambahbaikan', Rumusan: 'Pencapaian & Impak'
+      Improve: 'Penambahbaikan', Rumusan: 'Pencapaian & Impak',
+      Masa: 'Masa', Tempat: 'Tempat', Kekuatan: 'Kekuatan Program',
+      Ucapan: 'Ucapan / Nota Tambahan'
     }
   },
   PENTADBIRAN: {
@@ -1022,7 +1047,9 @@ const PROFIL_JENIS = {
       Anjuran: 'Anjuran', Peringkat: 'Peringkat', Perincian: 'Perincian Pelaksanaan',
       Tarikh: 'Tarikh Pelaksanaan', Lelaki: 'Peserta Lelaki', Perempuan: 'Peserta Perempuan',
       Objektif: 'Objektif Pengurusan', Kaedah: 'Kaedah Pelaksanaan',
-      Improve: 'Penambahbaikan', Rumusan: 'Rumusan & Tindakan Susulan'
+      Improve: 'Penambahbaikan', Rumusan: 'Rumusan & Tindakan Susulan',
+      Masa: 'Masa', Tempat: 'Tempat', Kekuatan: 'Kekuatan Program',
+      Ucapan: 'Ucapan / Nota Tambahan'
     }
   },
   HEM: {
@@ -1037,7 +1064,9 @@ const PROFIL_JENIS = {
       Anjuran: 'Anjuran', Peringkat: 'Peringkat', Perincian: 'Perincian Program',
       Tarikh: 'Tarikh Pelaksanaan', Lelaki: 'Murid Lelaki', Perempuan: 'Murid Perempuan',
       Objektif: 'Objektif Program', Kaedah: 'Kaedah Pelaksanaan',
-      Improve: 'Penambahbaikan', Rumusan: 'Rumusan & Impak'
+      Improve: 'Penambahbaikan', Rumusan: 'Rumusan & Impak',
+      Masa: 'Masa', Tempat: 'Tempat', Kekuatan: 'Kekuatan Program',
+      Ucapan: 'Ucapan / Nota Tambahan'
     }
   },
   SUBJEK: {
@@ -1052,13 +1081,32 @@ const PROFIL_JENIS = {
       Anjuran: 'Anjuran', Peringkat: 'Tingkatan', Perincian: 'Perincian Pelaksanaan',
       Tarikh: 'Tarikh Pelaksanaan', Lelaki: 'Murid Lelaki', Perempuan: 'Murid Perempuan',
       Objektif: 'Objektif Pembelajaran', Kaedah: 'Strategi PdP',
-      Improve: 'Penambahbaikan', Rumusan: 'Refleksi & Impak'
+      Improve: 'Penambahbaikan', Rumusan: 'Refleksi & Impak',
+      Masa: 'Masa', Tempat: 'Tempat', Kekuatan: 'Kekuatan Program',
+      Ucapan: 'Ucapan / Nota Tambahan'
+    }
+  },
+  GURU_BERTUGAS_MINGGUAN: {
+    nama: 'Guru Bertugas Mingguan', ikon: 'fa-user-clock',
+    nota: 'Untuk laporan mingguan guru bertugas — perhimpunan, ucapan bertema dan pemantauan sekolah.',
+    kategoriUnit: ['MINGGU_BERTUGAS'],
+    kategoriPeringkat: 'PERINGKAT',
+    petunjukUnit: 'Cari atau pilih minggu bertugas...',
+    petunjukTajuk: 'Contoh: Laporan Guru Bertugas Minggu 3 (15-19 Jan 2026)',
+    label: {
+      Tajuk: 'Tajuk Laporan / Minggu Bertugas', Unit: 'Minggu Bertugas',
+      Anjuran: 'Anjuran', Peringkat: 'Peringkat', Perincian: 'Perincian Pelaksanaan',
+      Tarikh: 'Tarikh Pelaksanaan', Lelaki: 'Kehadiran Murid (L)', Perempuan: 'Kehadiran Murid (P)',
+      Objektif: 'Objektif Program', Kaedah: 'Kaedah Pelaksanaan',
+      Improve: 'Penambahbaikan', Rumusan: 'Rumusan Program',
+      Masa: 'Masa', Tempat: 'Tempat', Kekuatan: 'Kekuatan Program',
+      Ucapan: 'Ucapan Bertema'
     }
   }
 };
 
 const SENARAI_JENIS = ['KOKURIKULUM', 'KELAS', 'EVENT', 'SUBJEK',
-                      'AKADEMIK', 'PENTADBIRAN', 'HEM'];
+                      'AKADEMIK', 'PENTADBIRAN', 'HEM', 'GURU_BERTUGAS_MINGGUAN'];
 let JENIS_SEMASA  = 'KOKURIKULUM';
 let jenisDipilih  = false;   // true selepas guru menekan butang jenis sendiri
 
@@ -1738,10 +1786,14 @@ function lukisPratonton() {
   isi('pvAnjuran', g('fAnjuran'));
   isi('pvPeringkat', g('fPeringkat'));
   isi('pvTarikh', g('fTarikh') ? tarikhInputKeDMY(g('fTarikh')) : '');
+  isi('pvMasa', g('fMasa'));
+  isi('pvTempat', g('fTempat'));
   const l = Number(g('fLelaki')) || 0, p = Number(g('fPerempuan')) || 0;
   isi('pvLelaki', l); isi('pvPerempuan', p); isi('pvJumlah', l + p);
   isi('pvObjektif', g('fObjektif'));
+  isi('pvUcapan', g('fUcapan'));
   isi('pvKaedah', g('fKaedah'));
+  isi('pvKekuatan', g('fKekuatan'));
   isi('pvImprove', g('fImprove'));
   isi('pvRumusan', g('fRumusan'));
   // Nama penyedia dipapar melalui blok tandatangan dinamik (lukisTandatangan).
@@ -2233,7 +2285,9 @@ async function hantarLaporan(status) {
         tarikhProgram: $('fTarikh').value, jumLelaki: $('fLelaki').value,
         jumPerempuan: $('fPerempuan').value, objektif: $('fObjektif').value,
         kaedah: $('fKaedah').value, penambahbaikan: $('fImprove').value,
-        rumusan: $('fRumusan').value
+        rumusan: $('fRumusan').value, masa: $('fMasa').value,
+        tempat: $('fTempat').value, ucapanBertema: $('fUcapan').value,
+        kekuatan: $('fKekuatan').value
       }
     });
 
@@ -2325,8 +2379,8 @@ function blobKeBase64(blob) {
 }
 
 function resetBorang() {
-  ['fId', 'fTajuk', 'fUnit', 'cariUnit', 'fTarikh', 'fLelaki', 'fPerempuan',
-   'fObjektif', 'fImprove', 'fRumusan', 'fPenyemak', 'fPengesah'].forEach(id => { $(id).value = ''; });
+  ['fId', 'fTajuk', 'fUnit', 'cariUnit', 'fTarikh', 'fMasa', 'fTempat', 'fLelaki', 'fPerempuan',
+   'fObjektif', 'fUcapan', 'fImprove', 'fKekuatan', 'fRumusan', 'fPenyemak', 'fPengesah'].forEach(id => { $(id).value = ''; });
   medanDisentuh = new Set();
   ['fAnjuran', 'fPeringkat', 'fKaedah'].forEach(id => { $(id).selectedIndex = 0; });
   $('fNama').value = SESI ? SESI.nama : '';
@@ -2525,7 +2579,9 @@ async function editLaporan(id) {
     pilihAtauTambah('fPeringkat', d.peringkat);
     pilihAtauTambah('fKaedah', d.kaedah);
     $('fTarikh').value = d.tarikhProgram; $('fLelaki').value = d.jumLelaki; $('fPerempuan').value = d.jumPerempuan;
+    $('fMasa').value = d.masa || ''; $('fTempat').value = d.tempat || '';
     $('fObjektif').value = d.objektif; $('fImprove').value = d.penambahbaikan;
+    $('fUcapan').value = d.ucapanBertema || ''; $('fKekuatan').value = d.kekuatan || '';
     $('fRumusan').value = d.rumusan; $('fNama').value = d.nama;
 
     // Ruang tandatangan rekod ini dipulihkan seperti asal — bukan tetapan
