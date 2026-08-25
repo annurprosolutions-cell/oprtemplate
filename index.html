@@ -172,6 +172,117 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
 .kad-gambar figcaption{font-size:9.5px;line-height:1.3;padding:5px 7px;color:#78350f;
   background:#fffbeb;border-top:1px solid #fde68a;text-align:center;flex:0 0 auto;font-weight:600;}
 
+/* --- Jalur gambar SATU MUKA (gaya Kotak, sehingga 5 gambar) ---
+   Bila laporan ada 1-5 gambar dan gaya = KOTAK, gambar disatukan terus pada
+   muka 1 dalam jalur padat ini (bukan muka 2 berasingan) supaya PDF benar-
+   benar SATU muka. Lebih daripada 5 gambar (atau jika kandungan melimpah)
+   jatuh balik automatik ke muka 2 (lihat kemaskiniLayoutGambar()).
+
+   v2.11.0 — PENGISIAN RUANG BAKI (bukan tinggi tetap lagi): sebelum ni jalur
+   gambar tetap 20mm tinggi tak kira berapa banyak ruang baki ada di muka —
+   bila medan maklumat sikit (borang ringkas/Poster kosong), ruang kosong
+   besar tergantung antara jalur gambar dan kaki tandatangan (sebab
+   .a4-page guna justify-content:space-between). Guru minta gambar ISI
+   ruang baki tu, bukan biar kosong. Fix: #pvStripSatuMuka/#psGridGambar kini
+   flex:1 (bukan flex:0 0 auto) supaya ia MENGEMBANG untuk mengisi apa
+   sahaja ruang yang tinggal selepas semua kotak maklumat + kaki tandatangan
+   — min-height:20mm dikekalkan sebagai LANTAI (bukan siling) supaya kalau
+   kotak maklumat memang banyak (cth Kokurikulum 15 kotak), jalur tetap
+   ambil sekurang-kurangnya 20mm yang sama seperti dulu (justeru overflow
+   sebenar tetap dikesan betul oleh jaringan keselamatan scrollHeight —
+   lantai ni TIDAK PERNAH dikecilkan, cuma siling dibuang). Rantaian flex
+   bersarang: .pv-isi-satu/.poster-isi (pembalut kandungan) → #pvStripSatuMuka/
+   #psGridGambar (flex:1, lantai 20mm) → .strip-grid (lajur baris, flex:1) →
+   .strip-baris (satu baris, flex:1 supaya semua baris kongsi tinggi sama
+   rata) → .strip-kad → .strip-bingkai (flex:1, isi penuh kad). Setiap
+   peringkat guna flexbox SAHAJA (bukan CSS grid) — teknik yang sama macam
+   .a4-page sendiri, sudah terbukti selamat dengan html2canvas dalam sistem
+   ni; grid tak pernah diuji dengan html2canvas di sini jadi dielakkan. */
+.pv-isi-satu, .poster-isi{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;}
+.pv-isi-satu > *, .poster-isi > *{flex:0 0 auto;}
+#pvStripSatuMuka, #psGridGambar{flex:1 1 auto;min-height:20mm;display:flex;flex-direction:column;}
+.strip-grid{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;gap:6px;}
+.strip-baris{display:flex;flex:1 1 0;min-height:0;gap:6px;}
+.strip-kad{flex:1 1 0;min-width:0;min-height:0;background:#fff;border:1px solid #e8edf3;border-radius:6px;
+  overflow:hidden;display:flex;flex-direction:column;box-shadow:0 2px 4px -1px rgba(0,0,0,.05);}
+/* PENTING — kenapa background-image DI SINI (bukan <img> seperti .kad-bingkai):
+   sel jalur/poster ini kecil dan nisbahnya tidak tentu (kadang jauh lebih
+   lebar/tinggi daripada gambar asal), jadi saiz semulajadi <img> boleh
+   tenggelam dalam banyak ruang kosong. html2canvas TIDAK menyokong CSS
+   object-fit pada <img>, tetapi ia MELUKIS background-image dengan
+   background-size:cover dengan betul — jadi teknik "isi penuh" di sini guna
+   background-image, bukan <img>. Gambar dokumentasi UTAMA (muka 2 / lampiran)
+   kekal guna <img> saiz semulajadi seperti biasa; ini khusus untuk
+   thumbnail kecil sahaja. */
+.strip-bingkai{flex:1 1 auto;min-height:0;background:#f8fafc no-repeat center/cover;overflow:hidden;}
+.strip-kad figcaption{font-size:8px;line-height:1.25;padding:3px 4px;color:#78350f;
+  background:#fffbeb;border-top:1px solid #fde68a;text-align:center;font-weight:600;flex:0 0 auto;}
+
+/* --- Gaya POSTER: templat padat satu muka (alternatif kepada Kotak) ---
+   v2.10.1 — reka bentuk asal (sisi gelap sempit 26mm + lajur gambar potret
+   46mm) DIGUGURKAN selepas laporan sebenar (medan teks realistik, bukan
+   ujian ringkas) menunjukkan dua pepijat: (1) kotak maklumat tidak muat
+   dalam lajur sempit itu bila teks panjang — .poster-sisi-blok tiada
+   ketinggian tetap tetapi html2canvas didapati salah kira ketinggian
+   -webkit-line-clamp (dipakai pada Objektif/Ucapan/Kekuatan/Improve),
+   menyebabkan teks kelihatan bertindan (overlap) dalam PDF; (2) apabila
+   ketinggian sebenar jadi lebih panjang daripada dijangka, kandungan itu
+   melimpah past 297mm SENYAP — tiada jaringan keselamatan scrollHeight
+   untuk gaya Poster (tidak seperti gaya Kotak), jadi html2pdf memotong
+   lambakan itu ke muka PDF ke-2 yang hampir kosong.
+   Templat baharu guna corak SAMA yang terbukti selamat pada gaya Kotak —
+   .kotak/.pv-grid/.lbl/.val, aliran dokumen biasa, TIADA -webkit-line-
+   clamp — supaya kedua-dua gaya sama tahan lasak. Bezanya dengan Kotak:
+   warna aksen (bukan indigo), tajuk laporan jadi kepala utama (bukan kotak
+   berasingan), dan gambar diletak sebagai JALUR LANDSKAP di bawah SEMUA
+   maklumat (bukan lajur potret di sisi — ruang lajur sempit menjadikan
+   gambar kecil & tenggelam). Terhad kepada 5 gambar sepertimana gaya
+   Kotak; lebih daripada itu ATAU jika kandungan tetap melimpah (jaringan
+   keselamatan scrollHeight — kini turut dipakai untuk Poster, lihat
+   kemaskiniLayoutGambar()) jatuh balik SEPENUHNYA kepada gaya Kotak
+   dua-muka, sama seperti sebelum ini. */
+.a4-page.poster{padding:10mm;background:var(--kertas,#fff);}
+.poster-kepala{border-bottom-color:var(--aksen);}
+.poster-tajuk{font-size:1.3rem;font-weight:700;color:#0f172a;line-height:1.12;}
+.poster-sekolah{font-size:.72rem;font-weight:700;text-transform:uppercase;
+  color:var(--w2);margin-top:3px;}
+.poster-rumusan-blok{background:#fffbeb;border:1px solid #fde68a;border-left:5px solid var(--aksen);
+  border-radius:8px;padding:8px 10px;}
+.poster-rumusan-teks{font-size:.8rem;color:#0f172a;line-height:1.42;
+  white-space:pre-wrap;word-break:break-word;}
+.poster-chip-baris{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+.poster-chip{background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:6px 8px;
+  border-left:4px solid #0d9488;}
+.poster-chip-lbl{font-size:.58rem;text-transform:uppercase;letter-spacing:.03em;
+  color:#64748b;font-weight:700;margin-bottom:2px;}
+.poster-chip-val{font-size:.7rem;color:#0f172a;font-weight:500;line-height:1.32;
+  white-space:pre-wrap;word-break:break-word;}
+.poster-bawah{flex:0 0 auto;border-top:2px solid #cbd5e1;padding-top:6px;}
+.poster-bawah-baris{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;}
+/* --- Logo tambahan (kaki PDF, v2.12) — pilihan per-laporan, lihat
+   LOGO_FOOTER_SLOT. Sebaris DI BAWAH ruang tandatangan (Pegawai Pelapor &
+   Pengesahan), guna teknik SAMA seperti .pv-logo (header sekolah) — height
+   tetap + object-fit:contain pada <img> — sebab ini badge/logo rasmi
+   berlatar lutsinar (bukan gambar aktiviti dgn nisbah rawak), jadi TIDAK
+   tertakluk pada larangan object-fit untuk gambar aktiviti (lihat nota
+   .kad-bingkai) — .pv-logo/.pv-logo-kecil header sedia ada dah buktikan
+   teknik ni selamat dgn html2canvas dalam sistem ni.
+   v2.12.1 — dibesarkan (26px->42px Kotak, 22px->36px Poster) supaya benar-
+   benar kelihatan, bukan sekadar hiasan kecik yang mudah tertinggal mata.
+   Jajaran (kiri/tengah/kanan) ditetapkan admin (LOGO_FOOTER_ALIGN, lalai
+   TENGAH) — lihat lukisLogoFooterPdf(). */
+.pv-logo-footer, .poster-logo-footer{display:flex;align-items:center;justify-content:center;gap:14px;margin:10px 0;flex-wrap:wrap;}
+.pv-logo-footer img, .poster-logo-footer img{height:50px;width:auto;max-width:68px;object-fit:contain;}
+.poster-logo-footer{margin:8px 0;}
+.poster-logo-footer img{height:50px;max-width:65px;}
+.logo-footer-kiri{justify-content:flex-start;}
+.logo-footer-tengah{justify-content:center;}
+.logo-footer-kanan{justify-content:flex-end;}
+.poster-ttd{display:flex;gap:16px;flex-wrap:wrap;}
+.poster-ttd-blok{font-size:.62rem;color:#334155;}
+.poster-ttd-garis{border-bottom:1px solid #94a3b8;width:34mm;margin:10px 0 2px;}
+.poster-baki{font-size:8.5px;color:#64748b;text-align:right;}
+
 /* --- Jadual --- */
 .tbl th{background:#f8fafc;color:#475569;padding:.7rem 1rem;text-transform:uppercase;
   font-size:.7rem;text-align:left;border-bottom:2px solid #e2e8f0;font-weight:700;}
@@ -577,6 +688,11 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
         <div class="kad">
           <h2 class="text-base font-bold mb-3"><i class="fas fa-palette mr-2 teks-w1"></i>Rupa Dokumen</h2>
 
+          <label class="lbl">Gaya Laporan</label>
+          <select id="fGayaLaporan" class="inp text-xs mb-1"
+                  onchange="tandaSentuh('fGayaLaporan');lukisPratonton()"></select>
+          <p id="notaGaya" class="text-[10px] text-slate-400 mb-4"></p>
+
           <label class="lbl">Warna Kertas PDF</label>
           <div id="swatchKertas" class="flex flex-wrap gap-2 mb-2 mt-1"></div>
           <div class="flex items-center gap-2 mb-4">
@@ -589,6 +705,15 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
           <select id="fSusunGambar" class="inp text-xs mb-1"
                   onchange="tandaSentuh('fSusunGambar');lukisPratonton()"></select>
           <p id="notaSusun" class="text-[10px] text-slate-400 mb-4"></p>
+
+          <!-- Logo tambahan (kaki PDF, v2.12). Admin setup dalam Tetapan
+               Sistem; blok ni sorok terus kalau admin tak konfigur mana-mana
+               (elak clutter untuk sekolah yang tak guna ciri ni). Tak wajib —
+               lalai TIDAK ditick, guru tick kalau laporan ni perlukannya. -->
+          <div class="border-t border-slate-100 pt-3 mb-1 hidden" id="blokLogoFooter">
+            <label class="lbl mb-1.5">Logo Tambahan (Kaki PDF)</label>
+            <div id="senaraiLogoFooter" class="flex flex-wrap gap-x-4 gap-y-2"></div>
+          </div>
 
           <label class="flex items-start gap-2.5 cursor-pointer border-t border-slate-100 pt-3">
             <input type="checkbox" id="tJanaPdf" class="mt-0.5 accent-teal-600 h-4 w-4" checked
@@ -627,7 +752,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
         <div id="pdfContent">
           <!-- HALAMAN 1 -->
           <div class="a4-page" id="pageOne">
-            <div>
+            <div class="pv-isi-satu">
               <div class="pv-kepala">
                 <div class="pv-logo-set">
                   <img id="pvLogo1" class="pv-logo hidden" alt="">
@@ -673,12 +798,23 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
               <div class="kotak teal pv-sela" id="pvKotakKekuatan"><div class="lbl" id="pvLblKekuatan">Kekuatan Program</div><div class="val" id="pvKekuatan">-</div></div>
               <div class="kotak emerald pv-sela" id="pvKotakImprove"><div class="lbl" id="pvLblImprove">Penambahbaikan</div><div class="val" id="pvImprove">-</div></div>
               <div class="kotak amber pv-sela" id="pvKotakRumusan"><div class="lbl" id="pvLblRumusan">Rumusan</div><div class="val" id="pvRumusan">-</div></div>
+
+              <!-- Jalur gambar satu-muka (gaya Kotak, 1-5 gambar sahaja).
+                   Diisi/disembunyikan oleh kemaskiniLayoutGambar(); kosong
+                   & tersembunyi secara lalai. -->
+              <div id="pvStripSatuMuka" class="hidden"></div>
             </div>
 
             <div class="pv-kaki" id="kakiSatu">
               <!-- Ruang tandatangan dibina secara dinamik: hanya slot yang
                    ditanda oleh guru akan muncul, dan bilangan lajur mengikutnya. -->
               <div class="pv-grid pv-tandatangan" id="pvTandatangan"></div>
+              <!-- Logo tambahan (kaki PDF, v2.12) — dikonfigur admin dalam
+                   Tetapan Sistem, guru pilih yang mana disertakan untuk
+                   laporan ini. Diisi/disembunyikan oleh lukisLogoFooterPdf().
+                   v2.12.1 — sengaja DI BAWAH ruang tandatangan (Pegawai
+                   Pelapor & Pengesahan), bukan di atasnya. -->
+              <div id="pvLogoFooter" class="pv-logo-footer hidden"></div>
               <div class="pv-baris-kaki">
                 <div id="pvFooter"></div>
                 <div id="pvTarikhCetak"></div>
@@ -706,6 +842,85 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
                 <div id="pvNama2" style="font-weight:700;color:#0f172a;font-size:11px">-</div>
               </div>
               <div id="pvFooter2"></div>
+            </div>
+          </div>
+
+          <!-- GAYA POSTER: templat alternatif satu-muka (dipilih guru melalui
+               "Gaya Laporan" — lihat kad Rupa Dokumen). Tersembunyi secara
+               lalai; kemaskiniLayoutGambar() menukar antara ini dengan
+               #pageOne/#pageTwo. Diisi oleh lukisPoster(). -->
+          <div class="a4-page poster" id="posterPage" style="display:none">
+            <div class="poster-isi">
+              <div class="pv-kepala poster-kepala">
+                <div class="pv-logo-set">
+                  <img id="psLogo1" class="pv-logo hidden" alt="">
+                  <img id="psLogo2" class="pv-logo hidden" alt="">
+                </div>
+                <div class="pv-kepala-teks">
+                  <div class="pv-jenis" id="psJenis">Laporan</div>
+                  <h1 class="poster-tajuk" id="psTajuk">-</h1>
+                  <div class="poster-sekolah" id="psSekolah"></div>
+                </div>
+              </div>
+
+              <div class="pv-grid pv-3 pv-sela">
+                <div class="kotak indigo" id="psBlokUnit"><div class="lbl" id="psLblUnit">Unit Kokurikulum</div><div class="val pv-kecil" id="psUnit">-</div></div>
+                <div class="kotak indigo" id="psBlokAnjuran"><div class="lbl" id="psLblAnjuran">Anjuran</div><div class="val pv-kecil" id="psAnjuran">-</div></div>
+                <div class="kotak indigo" id="psBlokPeringkat"><div class="lbl" id="psLblPeringkat">Peringkat</div><div class="val pv-kecil" id="psPeringkat">-</div></div>
+              </div>
+
+              <div class="pv-grid pv-3 pv-sela">
+                <div class="kotak emerald" id="psBlokTarikh"><div class="lbl">Tarikh</div><div class="val pv-kecil" id="psTarikh">-</div></div>
+                <div class="kotak emerald" id="psBlokMasa"><div class="lbl">Masa</div><div class="val pv-kecil" id="psMasa">-</div></div>
+                <div class="kotak emerald" id="psBlokTempat"><div class="lbl">Tempat</div><div class="val pv-kecil" id="psTempat">-</div></div>
+              </div>
+
+              <div class="pv-grid pv-2 pv-sela">
+                <div class="kotak rose" id="psBlokKaedah"><div class="lbl" id="psLblKaedah">Kaedah Pelaksanaan</div><div class="val pv-kecil" id="psKaedah">-</div></div>
+                <div class="kotak sky" id="psBlokKehadiran"><div class="lbl">Sasaran / Kehadiran</div><div class="val pv-kecil" id="psKehadiran">-</div></div>
+              </div>
+
+              <div class="kotak pv-sela" id="psBlokObjektif"><div class="lbl" id="psLblObjektif">Objektif</div><div class="val pv-kecil" id="psObjektif">-</div></div>
+
+              <div class="poster-rumusan-blok pv-sela" id="psBlokRumusan">
+                <div class="lbl" id="psLblRumusan">Rumusan</div>
+                <div class="poster-rumusan-teks" id="psRumusan">-</div>
+              </div>
+
+              <div class="poster-chip-baris pv-sela">
+                <div class="poster-chip" id="psChipUcapan">
+                  <div class="poster-chip-lbl" id="psLblUcapan">Ucapan / Nota Tambahan</div>
+                  <div class="poster-chip-val" id="psUcapan">-</div>
+                </div>
+                <div class="poster-chip" id="psChipKekuatan">
+                  <div class="poster-chip-lbl" id="psLblKekuatan">Kekuatan Program</div>
+                  <div class="poster-chip-val" id="psKekuatan">-</div>
+                </div>
+                <div class="poster-chip" id="psChipImprove">
+                  <div class="poster-chip-lbl" id="psLblImprove">Penambahbaikan</div>
+                  <div class="poster-chip-val" id="psImprove">-</div>
+                </div>
+              </div>
+
+              <!-- Jalur gambar landskap (sama teknik seperti #pvStripSatuMuka
+                   gaya Kotak) diletak di bawah SEMUA maklumat — bukan lajur
+                   potret di sisi seperti reka bentuk asal. Diisi/disembunyikan
+                   oleh lukisPosterGambar(). -->
+              <div id="psGridGambar" class="hidden"></div>
+            </div>
+
+            <div class="poster-bawah">
+              <div class="poster-bawah-baris">
+                <div class="poster-ttd" id="psTandatangan"></div>
+                <div class="poster-baki">
+                  <div id="psFooter"></div>
+                  <div id="psTarikhCetak"></div>
+                </div>
+              </div>
+              <!-- Logo tambahan (kaki PDF, v2.12) — sama fungsi seperti
+                   #pvLogoFooter gaya Kotak. v2.12.1 — sengaja DI BAWAH
+                   baris tandatangan/footer, bukan di atasnya. -->
+              <div id="psLogoFooter" class="poster-logo-footer hidden"></div>
             </div>
           </div>
 
@@ -799,7 +1014,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
           <div><label class="lbl">Warna Aksen</label><input type="color" id="cWARNA_AKSEN" class="inp h-11 p-1"></div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2 border-t">
           <div>
             <label class="lbl">Warna Kertas PDF (lalai)</label>
             <input type="color" id="cWARNA_KERTAS" class="inp h-11 p-1">
@@ -807,6 +1022,10 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
           <div>
             <label class="lbl">Susun Atur Gambar (lalai)</label>
             <select id="cSUSUN_GAMBAR" class="inp"></select>
+          </div>
+          <div>
+            <label class="lbl">Gaya Laporan (lalai)</label>
+            <select id="cGAYA_LAPORAN" class="inp"></select>
           </div>
           <div>
             <label class="lbl">Jana PDF Wajib?</label>
@@ -853,6 +1072,60 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
               <button onclick="muatNaikLogo(2)" class="btn-utama px-3 py-2 rounded text-xs font-bold">Naik</button>
             </div>
             <p id="pautanLogo2" class="text-[10px] text-slate-400 mt-1.5"></p>
+          </div>
+        </div>
+        <div class="pt-2 border-t">
+          <label class="lbl">Logo Tambahan (kaki PDF, pilihan)</label>
+          <p class="text-[11px] text-slate-400 leading-relaxed mb-2">
+            Sebaris di bawah ruang tandatangan (Pegawai Pelapor & Pengesahan) — cth: badan sukan,
+            jabatan, penaja. Bukan wajib — guru tick sendiri dalam borang laporan jika perlu. Muat naik
+            di sini sahaja yang aktif dipapar pada guru; ruang yang kosong tersembunyi automatik.
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div class="flex items-center gap-3">
+                <img id="pratontonLogo3" class="h-14 w-14 object-contain border rounded bg-white" alt="">
+                <input type="file" id="failLogo3" accept="image/png,image/jpeg,image/webp" class="text-xs flex-1">
+                <button onclick="muatNaikLogo(3)" class="btn-utama px-3 py-2 rounded text-xs font-bold">Naik</button>
+              </div>
+              <input type="text" id="cLOGO3_LABEL" class="inp mt-1.5 text-xs" placeholder="Label, cth: Logo 3">
+              <p id="pautanLogo3" class="text-[10px] text-slate-400 mt-1.5"></p>
+            </div>
+            <div>
+              <div class="flex items-center gap-3">
+                <img id="pratontonLogo4" class="h-14 w-14 object-contain border rounded bg-white" alt="">
+                <input type="file" id="failLogo4" accept="image/png,image/jpeg,image/webp" class="text-xs flex-1">
+                <button onclick="muatNaikLogo(4)" class="btn-utama px-3 py-2 rounded text-xs font-bold">Naik</button>
+              </div>
+              <input type="text" id="cLOGO4_LABEL" class="inp mt-1.5 text-xs" placeholder="Label, cth: Logo 4">
+              <p id="pautanLogo4" class="text-[10px] text-slate-400 mt-1.5"></p>
+            </div>
+            <div>
+              <div class="flex items-center gap-3">
+                <img id="pratontonLogo5" class="h-14 w-14 object-contain border rounded bg-white" alt="">
+                <input type="file" id="failLogo5" accept="image/png,image/jpeg,image/webp" class="text-xs flex-1">
+                <button onclick="muatNaikLogo(5)" class="btn-utama px-3 py-2 rounded text-xs font-bold">Naik</button>
+              </div>
+              <input type="text" id="cLOGO5_LABEL" class="inp mt-1.5 text-xs" placeholder="Label, cth: Logo 5">
+              <p id="pautanLogo5" class="text-[10px] text-slate-400 mt-1.5"></p>
+            </div>
+            <div>
+              <div class="flex items-center gap-3">
+                <img id="pratontonLogo6" class="h-14 w-14 object-contain border rounded bg-white" alt="">
+                <input type="file" id="failLogo6" accept="image/png,image/jpeg,image/webp" class="text-xs flex-1">
+                <button onclick="muatNaikLogo(6)" class="btn-utama px-3 py-2 rounded text-xs font-bold">Naik</button>
+              </div>
+              <input type="text" id="cLOGO6_LABEL" class="inp mt-1.5 text-xs" placeholder="Label, cth: Logo 6">
+              <p id="pautanLogo6" class="text-[10px] text-slate-400 mt-1.5"></p>
+            </div>
+          </div>
+          <div class="mt-3 max-w-xs">
+            <label class="lbl">Kedudukan Logo Tambahan</label>
+            <select id="cLOGO_FOOTER_ALIGN" class="inp">
+              <option value="KIRI">Kiri</option>
+              <option value="TENGAH">Tengah (disyorkan)</option>
+              <option value="KANAN">Kanan</option>
+            </select>
           </div>
         </div>
         <p class="text-[11px] text-slate-400 leading-relaxed">
@@ -1012,7 +1285,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
    ===================================================================== */
 
 /* >>> ISI URL WEB APP ANDA DI SINI (berakhir dengan /exec) <<< */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4FRc-xbldHabkan7VuPql-EvFvBo_QFs0YC2bzbw2v9j-5nBq3qdthlnxdhHANzYG/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwTOGx6O-cyLn8VAD8FMZF20zsBXuyACjyfJhsM_2gZcMuQZdguNJ0Lqx0O-EyBe_hj/exec";
 
 // ---------------------------------------------------------------- state
 /* Akses storan pelayar dibungkus try/catch. Dalam mod privasi ketat, iframe
@@ -1257,6 +1530,24 @@ const SUSUN_GAMBAR = [
   { kod: 'EMPAT', nama: 'Empat lajur — gambar kecil',   nota: 'Untuk banyak gambar dokumentasi.' },
   { kod: 'SOROT', nama: 'Sorotan — 1 besar + selebihnya kecil', nota: 'Gambar pertama jadi sorotan utama.' }
 ];
+
+/**
+ * Gaya reka bentuk laporan PDF.
+ *   KOTAK  — reka bentuk sedia ada. Sehingga 5 gambar disatukan pada muka 1
+ *            supaya jadi benar-benar SATU muka; lebih daripada itu jatuh
+ *            balik ke muka 2 seperti biasa.
+ *   POSTER — templat poster padat, satu muka. Turut terhad 5 gambar; lebih
+ *            daripada itu jatuh balik SEPENUHNYA kepada gaya Kotak dua-muka.
+ * Lihat kemaskiniLayoutGambar().
+ */
+const GAYA_LAPORAN = [
+  { kod: 'KOTAK',  nama: 'Kotak (Standard)',  nota: 'Reka bentuk sedia ada. Sehingga 5 gambar disatukan pada muka 1.' },
+  { kod: 'POSTER', nama: 'Poster (Satu Muka)', nota: 'Templat poster padat — sesuai untuk paparan/edaran. Sehingga 5 gambar.' }
+];
+
+/* Had gambar supaya laporan kekal benar-benar SATU muka. Lebih daripada ini
+   jatuh balik ke muka 2 (lihat kemaskiniLayoutGambar()). */
+const MAKS_GAMBAR_SATU_MUKA = 5;
 
 /* Warna kertas pilihan pantas. Semuanya cerah supaya teks gelap kekal terbaca. */
 const WARNA_KERTAS = [
@@ -1549,6 +1840,7 @@ function pakaiTema(cfg) {
   pasangLogo('loginLogo1', cfg.logo1); pasangLogo('loginLogo2', cfg.logo2);
   pasangLogo('navLogo1', cfg.logo1);   pasangLogo('navLogo2', cfg.logo2);
   pasangLogo('pvLogo1', cfg.logo1);    pasangLogo('pvLogo2', cfg.logo2);
+  lukisPilihanLogoFooter(cfg);
 
   $('loginNamaSistem').textContent = cfg.namaSistem;
   $('loginNamaSekolah').textContent = cfg.namaSekolah;
@@ -1572,6 +1864,7 @@ function pakaiTema(cfg) {
   binaKawalanRupa();
   if (!medanDisentuh.has('fWarnaKertas')) $('fWarnaKertas').value = cfg.warnaKertas || '#fffbeb';
   if (!medanDisentuh.has('fSusunGambar')) $('fSusunGambar').value = cfg.susunGambar || 'AUTO';
+  if (!medanDisentuh.has('fGayaLaporan')) $('fGayaLaporan').value = cfg.gayaLaporan || 'KOTAK';
   pakaiDasarPdf();
 
   // --- profil jenis laporan (label, penyemak, baris jenis dalam PDF) ---
@@ -1782,18 +2075,21 @@ function pakaiJenis(kod, opsyen) {
   const t = tetapanJenis(kod);
   const setTeks = (id, teks) => { const n = $(id); if (n) n.textContent = teks; };
 
-  // Label borang dan label kotak dalam pratonton PDF
+  // Label borang, label kotak dalam pratonton PDF (gaya Kotak) DAN label
+  // dalam templat Poster — satu sumber (p.label), tiga tempat.
   Object.keys(p.label).forEach(k => {
     setTeks('lbl' + k, p.label[k]);
     setTeks('pvLbl' + k, p.label[k]);
+    setTeks('psLbl' + k, p.label[k]);
   });
   setTeks('pvLblTarikh', 'Tarikh');       // kotak sempit — versi pendek
   setTeks('notaJenis', p.nota);
   $('fTajuk').placeholder = p.petunjukTajuk;
   $('cariUnit').placeholder = p.petunjukUnit;
 
-  // Baris jenis dalam PDF
+  // Baris jenis dalam PDF (gaya Kotak dan Poster)
   setTeks('pvJenis', t.tajuk);
+  setTeks('psJenis', t.tajuk);
 
   // Jawatan penyemak/pengesah ikut tetapan sistem bagi jenis ini — kecuali
   // guru sudah menaip sendiri, maka taipannya dikekalkan.
@@ -1886,20 +2182,23 @@ document.addEventListener('click', (ev) => {
  * (lihat hantarLaporan) — walaupun kolum dalam Sheet sedia ada.
  * Satu checkbox boleh kawal lebih dari satu kotak (contoh: Kehadiran).
  */
+/* Setiap medan boleh kawal kotak dalam gaya Kotak (pvKotakXxx) DAN blok yang
+   sepadan dalam gaya Poster (psBlokXxx / psChipXxx) — dua reka bentuk, satu
+   sahaja tanda "Sertakan". */
 const MEDAN_SERTAKAN = [
-  { chk: 'tUnit',      kotak: ['pvKotakUnit'] },
-  { chk: 'tAnjuran',   kotak: ['pvKotakAnjuran'] },
-  { chk: 'tPeringkat', kotak: ['pvKotakPeringkat'] },
-  { chk: 'tTarikh',    kotak: ['pvKotakTarikh'] },
-  { chk: 'tMasa',      kotak: ['pvKotakMasa'] },
-  { chk: 'tTempat',    kotak: ['pvKotakTempat'] },
-  { chk: 'tKehadiran', kotak: ['pvKotakLelaki', 'pvKotakPerempuan', 'pvKotakJumlah'] },
-  { chk: 'tObjektif',  kotak: ['pvKotakObjektif'] },
-  { chk: 'tUcapan',    kotak: ['pvKotakUcapan'] },
-  { chk: 'tKaedah',    kotak: ['pvKotakKaedah'] },
-  { chk: 'tKekuatan',  kotak: ['pvKotakKekuatan'] },
-  { chk: 'tImprove',   kotak: ['pvKotakImprove'] },
-  { chk: 'tRumusan',   kotak: ['pvKotakRumusan'] }
+  { chk: 'tUnit',      kotak: ['pvKotakUnit', 'psBlokUnit'] },
+  { chk: 'tAnjuran',   kotak: ['pvKotakAnjuran', 'psBlokAnjuran'] },
+  { chk: 'tPeringkat', kotak: ['pvKotakPeringkat', 'psBlokPeringkat'] },
+  { chk: 'tTarikh',    kotak: ['pvKotakTarikh', 'psBlokTarikh'] },
+  { chk: 'tMasa',      kotak: ['pvKotakMasa', 'psBlokMasa'] },
+  { chk: 'tTempat',    kotak: ['pvKotakTempat', 'psBlokTempat'] },
+  { chk: 'tKehadiran', kotak: ['pvKotakLelaki', 'pvKotakPerempuan', 'pvKotakJumlah', 'psBlokKehadiran'] },
+  { chk: 'tObjektif',  kotak: ['pvKotakObjektif', 'psBlokObjektif'] },
+  { chk: 'tUcapan',    kotak: ['pvKotakUcapan', 'psChipUcapan'] },
+  { chk: 'tKaedah',    kotak: ['pvKotakKaedah', 'psBlokKaedah'] },
+  { chk: 'tKekuatan',  kotak: ['pvKotakKekuatan', 'psChipKekuatan'] },
+  { chk: 'tImprove',   kotak: ['pvKotakImprove', 'psChipImprove'] },
+  { chk: 'tRumusan',   kotak: ['pvKotakRumusan', 'psBlokRumusan'] }
 ];
 
 /** Sertakan/keluarkan sesuatu medan dari laporan ini sahaja (bukan tetapan sistem). */
@@ -1911,6 +2210,69 @@ function lukisSertakan() {
   MEDAN_SERTAKAN.forEach(m => {
     const papar = sertakanMedan(m.chk);
     m.kotak.forEach(k => { const n = $(k); if (n) n.style.display = papar ? '' : 'none'; });
+  });
+}
+
+/**
+ * Logo tambahan (kaki PDF, v2.12) — slot 3-6. Beza dengan MEDAN_SERTAKAN:
+ * bukan "value" per laporan (imej logo aset Config global dikongsi semua
+ * laporan), jadi kena tanda EKSPLISIT slot mana disertakan (rentetan "3,5"
+ * pada LogoFooter — corak sama seperti SlotTtd), bukan infer dari kosong/ada
+ * macam medan teks di atas. Lalai TIDAK ditick — guru pilih sendiri.
+ */
+const LOGO_FOOTER_SLOT = [3, 4, 5, 6];
+
+/** Senarai slot yang guru TICK untuk laporan semasa (rentetan cth ['3','5']). */
+function logoFooterDipilih() {
+  return LOGO_FOOTER_SLOT.filter(n => { const c = $('tLogo' + n); return c && c.checked; }).map(String);
+}
+
+/** Bina checkbox "sertakan" untuk setiap logo tambahan yang DIKONFIGUR admin
+    (CFG.logoN wujud) — slot yang tiada imej langsung tidak dipapar. Dipanggil
+    semula setiap kali CFG berubah (pakaiTema), bukan sekali sahaja, sebab
+    admin boleh tambah/tukar logo tengah sesi. Status tick sedia ada
+    dikekalkan merentasi bina semula supaya tidak tertanggal senyap. */
+function lukisPilihanLogoFooter(cfg) {
+  const bekas = $('senaraiLogoFooter'), blok = $('blokLogoFooter');
+  if (!bekas || !blok) return;
+  const sediaCentang = {};
+  LOGO_FOOTER_SLOT.forEach(n => { const c = $('tLogo' + n); if (c) sediaCentang[n] = c.checked; });
+  bekas.textContent = '';
+  const aktif = LOGO_FOOTER_SLOT.filter(n => cfg['logo' + n]);
+  blok.classList.toggle('hidden', aktif.length === 0);
+  aktif.forEach(n => {
+    const lbl = e_('label', 'flex items-center gap-1.5 cursor-pointer');
+    const chk = document.createElement('input');
+    chk.type = 'checkbox'; chk.id = 'tLogo' + n; chk.className = 'accent-teal-600 h-3.5 w-3.5 cursor-pointer';
+    chk.checked = !!sediaCentang[n];
+    chk.addEventListener('change', lukisPratonton);
+    const img = document.createElement('img');
+    img.src = cfg['logo' + n]; img.alt = '';
+    img.className = 'h-6 w-6 object-contain border rounded bg-white';
+    const teks = e_('span', 'text-[11px] font-semibold text-slate-600', cfg['logo' + n + 'Label'] || ('Logo ' + n));
+    lbl.appendChild(chk); lbl.appendChild(img); lbl.appendChild(teks);
+    bekas.appendChild(lbl);
+  });
+}
+
+/** Papar jalur kecil logo tambahan di kaki PDF — dikongsi Kotak & Poster.
+    Hanya logo yang (a) dikonfigur admin DAN (b) ditick guru untuk laporan
+    ini yang muncul. */
+function lukisLogoFooterPdf(bekas) {
+  if (!bekas) return;
+  bekas.textContent = '';
+  // v2.12.1 — jajaran (kiri/tengah/kanan) ditetapkan admin, lalai TENGAH.
+  bekas.classList.remove('logo-footer-kiri', 'logo-footer-tengah', 'logo-footer-kanan');
+  const jajaran = { KIRI: 'logo-footer-kiri', KANAN: 'logo-footer-kanan' }[CFG.logoFooterAlign] || 'logo-footer-tengah';
+  bekas.classList.add(jajaran);
+  const dipilih = logoFooterDipilih();
+  const tunjuk = LOGO_FOOTER_SLOT.filter(n => dipilih.indexOf(String(n)) !== -1 && CFG['logo' + n]);
+  bekas.classList.toggle('hidden', tunjuk.length === 0);
+  tunjuk.forEach(n => {
+    const img = document.createElement('img');
+    img.src = CFG['logo' + n];
+    img.alt = CFG['logo' + n + 'Label'] || ('Logo ' + n);
+    bekas.appendChild(img);
   });
 }
 
@@ -1944,9 +2306,10 @@ function lukisPratonton() {
   $('pvTarikhCetak').textContent = 'Dijana: ' + tarikhDMY(new Date());
 
   lukisTandatangan();
+  lukisLogoFooterPdf($('pvLogoFooter'));
   pakaiDasarPdf();
   pakaiWarnaKertas();
-  lukisGridGambar();
+  kemaskiniLayoutGambar();
 }
 
 /** Sapu warna kertas pilihan ke semua muka A4 (termasuk muka lampiran). */
@@ -1979,12 +2342,18 @@ function binaKawalanRupa() {
   if (sel && !sel.children.length) {
     SUSUN_GAMBAR.forEach(x => { const o = e_('option', '', x.nama); o.value = x.kod; sel.appendChild(o); });
   }
+  const selGaya = $('fGayaLaporan');
+  if (selGaya && !selGaya.children.length) {
+    GAYA_LAPORAN.forEach(x => { const o = e_('option', '', x.nama); o.value = x.kod; selGaya.appendChild(o); });
+  }
 }
 
 /** Kemas kini nota bantuan + dasar PDF sekolah. */
 function pakaiDasarPdf() {
   const susun = SUSUN_GAMBAR.filter(x => x.kod === ($('fSusunGambar').value || 'AUTO'))[0];
   $('notaSusun').textContent = susun ? susun.nota : '';
+  const gaya = GAYA_LAPORAN.filter(x => x.kod === ($('fGayaLaporan').value || 'KOTAK'))[0];
+  if ($('notaGaya')) $('notaGaya').textContent = gaya ? gaya.nota : '';
 
   const wajib = CFG.wajibPdf === true;
   const kotak = $('tJanaPdf');
@@ -2109,6 +2478,195 @@ function lukisGridGambar() {
     if (teks) kad.appendChild(e_('figcaption', '', teks));   // tiada kapsyen = tiada jalur putih
     grid.appendChild(kad);
   });
+}
+
+/**
+ * "One Page Report" sebenar: gaya reka bentuk (Kotak / Poster) menentukan
+ * templat, tetapi KEDUA-DUANYA cuba muat gambar terus pada muka 1 supaya
+ * PDF benar-benar SATU muka — bukan sekadar nama.
+ *
+ *   - Gaya KOTAK, 1-5 gambar: gambar disatukan dalam jalur padat pada muka 1
+ *     (#pvStripSatuMuka), muka 2 disembunyikan. Jaringan keselamatan: jika
+ *     kandungan tetap melimpah (medan teks terlalu panjang), jatuh balik
+ *     automatik ke muka 2 supaya TIADA apa yang terpotong.
+ *   - Gaya KOTAK, >5 gambar: seperti sistem asal — muka 1 teks, muka 2 grid
+ *     gambar penuh (SUSUN_GAMBAR).
+ *   - Gaya POSTER, 1-5 gambar: templat poster satu-muka (#posterPage).
+ *   - Gaya POSTER, >5 gambar: templat poster tidak cukup ruang untuk itu,
+ *     jadi jatuh balik SEPENUHNYA kepada gaya Kotak dua-muka supaya tiada
+ *     gambar yang hilang.
+ *
+ * PDF yang dimuat naik guru (lampiran dokumen) TIDAK pernah masuk kiraan
+ * ini — ia sentiasa jadi muka lampiran berasingan (lihat lukisHalamanPdf()).
+ */
+function kemaskiniLayoutGambar() {
+  const gaya = ($('fGayaLaporan') && $('fGayaLaporan').value) || 'KOTAK';
+  const bil = imejBukti.length;
+  // Jalur satu-muka gaya Kotak hanya bererti bila ADA gambar untuk disatukan.
+  const layakSatuMuka = bil > 0 && bil <= MAKS_GAMBAR_SATU_MUKA;
+  // Poster ialah PILIHAN templat, bukan sekadar penyelesaian gambar — jadi
+  // ia kekal terpakai walaupun tiada gambar langsung (lajur gambar tersembunyi).
+  const posterMuat = bil <= MAKS_GAMBAR_SATU_MUKA;
+
+  if (gaya === 'POSTER' && posterMuat) {
+    kosongkanStripSatuMuka();
+    $('pageOne').style.display = 'none';
+    $('pageTwo').style.display = 'none';
+    $('posterPage').style.display = '';
+    lukisPoster();
+    // Jaringan keselamatan (v2.10.1) — Poster tiada had ketat pada
+    // bilangan/panjang medan seperti Kotak; kandungan sebenar (bukan teks
+    // ujian ringkas) boleh melimpah past 297mm walaupun gambar <=5. Kalau
+    // itu berlaku, jatuh balik SEPENUHNYA ke Kotak dua-muka (sama seperti
+    // kes >5 gambar) supaya tiada apa yang terpotong/bertindan senyap-
+    // senyap dalam PDF. Sengaja TIDAK cuba jalur satu-muka Kotak dahulu —
+    // gelagat jatuh balik kekal mudah diramal: Poster muat sendiri, atau
+    // terus ke Kotak dua-muka yang terbukti selamat.
+    const pos = $('posterPage');
+    if (pos.scrollHeight <= pos.clientHeight + 2) return;
+    $('posterPage').style.display = 'none';
+  }
+
+  // Gaya Kotak (lalai) — atau Poster yang jatuh balik (>5 gambar, atau
+  // kandungan melimpah walaupun <=5).
+  $('pageOne').style.display = '';
+  $('posterPage').style.display = 'none';
+
+  if (gaya === 'KOTAK' && layakSatuMuka) {
+    $('pageTwo').style.display = 'none';
+    lukisStripSatuMuka();
+    const satu = $('pageOne');
+    if (satu.scrollHeight > satu.clientHeight + 2) {
+      // Teks terlalu panjang untuk muat sekali dengan gambar — jatuh balik
+      // ke muka 2 supaya tiada kandungan yang terpotong dalam PDF.
+      kosongkanStripSatuMuka();
+      lukisGridGambar();
+    }
+  } else {
+    kosongkanStripSatuMuka();
+    lukisGridGambar();
+  }
+}
+
+/** Bilangan lajur paling seimbang untuk N gambar (1-5, had MAKS_GAMBAR_SATU_MUKA).
+    3 gambar = 1 baris; 4 gambar = 2x2 (kad lebih besar drpd 3+1); 5 gambar =
+    3+2. Tujuannya bina grid yang lebih "petak" (bukan satu baris panjang
+    sempit) supaya setiap kad gambar lebih besar — permintaan guru selepas
+    gambar dilaporkan terlalu kecil dalam jalur satu-baris asal. */
+function kiraLajurGambar_(bil) {
+  if (bil <= 1) return 1;
+  if (bil === 2) return 2;
+  if (bil === 4) return 2;
+  return 3; // 3 gambar (1 baris) atau 5 gambar (3+2)
+}
+
+/** Bina jalur gambar padat (landskap, background-image cover) ke dalam
+    bekas yang diberi — dikongsi oleh gaya Kotak (#pvStripSatuMuka) dan
+    gaya Poster (#psGridGambar) supaya kedua-dua guna teknik SAMA yang
+    terbukti selamat untuk html2canvas (lihat nota .strip-bingkai).
+
+    v2.11.0 — susun dalam BEBERAPA BARIS (bukan satu baris rata) ikut
+    kiraLajurGambar_(), setiap baris flex:1 supaya kongsi tinggi sama rata
+    dan mengembang mengisi ruang baki muka (lihat #pvStripSatuMuka/
+    #psGridGambar dalam CSS) — kad jadi lebih besar & "2 baris" seperti
+    diminta guru, bukan sekadar lebih lebar. */
+function bentukJalurGambar(bekas) {
+  bekas.textContent = '';
+  bekas.classList.remove('hidden');
+  bekas.appendChild(e_('div', 'lbl', 'Gambar Aktiviti (' + imejBukti.length + ')'));
+  const grid = e_('div', 'strip-grid');
+  const kol = kiraLajurGambar_(imejBukti.length);
+  for (let i = 0; i < imejBukti.length; i += kol) {
+    const baris = e_('div', 'strip-baris');
+    imejBukti.slice(i, i + kol).forEach(img => {
+      const kad = e_('figure', 'strip-kad');
+      const bingkai = e_('div', 'strip-bingkai');
+      bingkai.style.backgroundImage = 'url(' + img.dataUrl + ')';
+      kad.appendChild(bingkai);
+      const teks = (img.keterangan || '').trim();
+      if (teks) kad.appendChild(e_('figcaption', '', teks));
+      baris.appendChild(kad);
+    });
+    grid.appendChild(baris);
+  }
+  bekas.appendChild(grid);
+}
+
+/** Isi jalur gambar padat pada muka 1 (gaya Kotak, 1-5 gambar). */
+function lukisStripSatuMuka() {
+  const bekas = $('pvStripSatuMuka'); if (!bekas) return;
+  bentukJalurGambar(bekas);
+}
+
+function kosongkanStripSatuMuka() {
+  const bekas = $('pvStripSatuMuka'); if (!bekas) return;
+  bekas.textContent = '';
+  bekas.classList.add('hidden');
+}
+
+/**
+ * Isi templat POSTER — reka bentuk padat satu-muka alternatif kepada Kotak.
+ * Guna medan borang yang sama seperti lukisPratonton(), jadi sentiasa
+ * sepadan dengan apa yang guru sedang taip.
+ */
+function lukisPoster() {
+  const g = (id) => $(id).value.trim();
+  const isi = (id, v) => { const n = $(id); if (n) n.textContent = (v === '' || v === null || v === undefined) ? '-' : v; };
+
+  isi('psTajuk', g('fTajuk'));
+  isi('psSekolah', CFG.namaSekolah || '');
+  isi('psUnit', g('fUnit'));
+  isi('psAnjuran', g('fAnjuran'));
+  isi('psPeringkat', g('fPeringkat'));
+  isi('psKaedah', g('fKaedah'));
+  isi('psObjektif', g('fObjektif'));
+  isi('psTarikh', g('fTarikh') ? tarikhInputKeDMY(g('fTarikh')) : '');
+  isi('psMasa', g('fMasa'));
+  isi('psTempat', g('fTempat'));
+  const l = Number(g('fLelaki')) || 0, p = Number(g('fPerempuan')) || 0;
+  isi('psKehadiran', (l + p) ? ((l + p) + ' murid  (L: ' + l + ' / P: ' + p + ')') : '');
+  isi('psRumusan', g('fRumusan'));
+  isi('psUcapan', g('fUcapan'));
+  isi('psKekuatan', g('fKekuatan'));
+  isi('psImprove', g('fImprove'));
+
+  const pasang = (id, src) => { const n = $(id); if (!n) return; if (src) { n.src = src; n.classList.remove('hidden'); } else { n.classList.add('hidden'); } };
+  pasang('psLogo1', CFG.logo1); pasang('psLogo2', CFG.logo2);
+
+  const footer = CFG.footerPdf || ('© ' + (CFG.namaSekolah || ''));
+  if ($('psFooter')) $('psFooter').textContent = footer;
+  if ($('psTarikhCetak')) $('psTarikhCetak').textContent = 'Dijana: ' + tarikhDMY(new Date());
+
+  lukisPosterTandatangan();
+  lukisSertakan();
+  lukisPosterGambar();
+  lukisLogoFooterPdf($('psLogoFooter'));
+}
+
+/** Ruang tandatangan padat (satu baris) untuk templat Poster. */
+function lukisPosterTandatangan() {
+  const bekas = $('psTandatangan'); if (!bekas) return;
+  bekas.textContent = '';
+  const dipilih = slotDipilih();
+  bekas.style.display = dipilih.length ? '' : 'none';
+  dipilih.forEach(sl => {
+    const blok = e_('div', 'poster-ttd-blok');
+    blok.appendChild(document.createTextNode(sl.label + ': '));
+    const nilai = String($(sl.medan).value || '').trim();
+    const tebal = document.createElement('b'); tebal.textContent = nilai || '-';
+    blok.appendChild(tebal);
+    blok.appendChild(e_('div', 'poster-ttd-garis'));
+    bekas.appendChild(blok);
+  });
+}
+
+/** Jalur gambar landskap templat Poster (di bawah semua maklumat) —
+    terhad kepada MAKS_GAMBAR_SATU_MUKA, teknik sama seperti jalur Kotak. */
+function lukisPosterGambar() {
+  const bekas = $('psGridGambar'); if (!bekas) return;
+  bekas.textContent = '';
+  if (!imejBukti.length) { bekas.classList.add('hidden'); return; }
+  bentukJalurGambar(bekas);
 }
 
 // ---------------------------------------------------------------- lampiran
@@ -2424,6 +2982,8 @@ async function hantarLaporan(status) {
         penyemak: $('fPenyemak').value, pengesah: $('fPengesah').value,
         slotTtd: slotDipilih().map(sl => sl.kod).join(','),
         warnaKertas: $('fWarnaKertas').value, susunGambar: $('fSusunGambar').value,
+        gayaLaporan: $('fGayaLaporan').value,
+        logoFooter: logoFooterDipilih().join(','),
         nama: $('fNama').value, tajuk: $('fTajuk').value,
         // Medan yang guru unticked "Sertakan" TIDAK dihantar — kekal kosong
         // dalam Sheet walaupun kolumnya sedia ada. Lihat MEDAN_SERTAKAN.
@@ -2490,6 +3050,10 @@ async function janaBlobPdf() {
     // muka kita tersasar walau 0.1px, lebihan itu menjadi satu muka surat
     // KOSONG di hujung PDF. Jadi tinggi setiap muka dikunci kepada nilai
     // potongan itu sendiri, tolak sedikit supaya tidak pernah melimpah.
+    // (Nilai -0.25 ini SENGAJA dikekalkan kecil — dibuktikan menaikkannya
+    // untuk cuba elak isu "1 muka jadi 2" di bawah menconteng sempadan
+    // muka pada dokumen BERBILANG muka. Fix isu itu dibuat selepas
+    // penjanaan kanvas sebaliknya — lihat pangkasSisaBundar().)
     const lebarPx = bekas.getBoundingClientRect().width || 794;
     const tinggiMuka = (lebarPx * 297 / 210) - 0.25;
     muka = Array.prototype.slice.call(bekas.querySelectorAll('.a4-page'));
@@ -2512,7 +3076,34 @@ async function janaBlobPdf() {
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
-    return await html2pdf().set(pilihan).from(bekas).outputPdf('blob');
+    return await html2pdf().set(pilihan).from(bekas).toCanvas().then(function pangkasSisaBundar() {
+      // v2.10.1 — pepijat "1 muka jadi 2": walaupun tinggi setiap .a4-page
+      // dikunci di atas, html2canvas kadang membundarkan tinggi KANVAS
+      // SEBENAR ke atas 1-2px berbanding tinggi satu muka yang legacy
+      // pagebreak slicer html2pdf sendiri kira (canvas.width * 297/210,
+      // Math.floor) — cukup untuk mencipta SATU muka PDF tambahan yang
+      // hampir kosong, paling ketara bila laporan satu-muka (Kotak/Poster)
+      // TIADA lampiran PDF (jadi tiada muka lain untuk "menyerap" hingar
+      // pembundaran itu). Cuba elakkan dengan menambah potongan tinggiMuka
+      // di atas terbukti RAPUH — nilai yang betul untuk 1 muka menconteng
+      // sempadan muka pada dokumen BERBILANG muka pula. Jadi dibuang di
+      // SINI sebaliknya: pangkas terus baki bundar yang SANGAT KECIL
+      // (<=8px kanvas, jauh lebih nipis daripada apa-apa kandungan
+      // sebenar — malah satu baris teks pun jauh lebih tinggi) daripada
+      // kanvas akhir sebelum ia dihiris ke muka PDF. Muka yang GENUINELY
+      // hampir penuh (baki besar, kandungan sebenar) tidak disentuh.
+      const kanvas = this.prop.canvas;
+      const pxMuka = Math.floor(kanvas.width * (297 / 210));
+      const mukaPenuh = Math.floor(kanvas.height / pxMuka);
+      const sisa = kanvas.height - mukaPenuh * pxMuka;
+      if (mukaPenuh >= 1 && sisa > 0 && sisa <= 8) {
+        const dipangkas = document.createElement('canvas');
+        dipangkas.width = kanvas.width;
+        dipangkas.height = mukaPenuh * pxMuka;
+        dipangkas.getContext('2d').drawImage(kanvas, 0, 0);
+        this.prop.canvas = dipangkas;
+      }
+    }).toPdf().outputPdf('blob');
   } finally {
     muka.forEach(m => { m.style.height = ''; m.style.minHeight = ''; m.style.maxHeight = ''; });
     bekas.classList.remove('menjana');
@@ -2538,6 +3129,9 @@ function resetBorang() {
   ['fAnjuran', 'fPeringkat', 'fKaedah'].forEach(id => { $(id).selectedIndex = 0; });
   // Laporan baharu: semua medan "Sertakan" kembali tertanda secara lalai.
   MEDAN_SERTAKAN.forEach(m => { const n = $(m.chk); if (n) n.checked = true; });
+  // Logo tambahan (kaki PDF) plak sebaliknya — lalai TIDAK ditick (pilihan,
+  // bukan wajib), lihat LOGO_FOOTER_SLOT.
+  LOGO_FOOTER_SLOT.forEach(n => { const c = $('tLogo' + n); if (c) c.checked = false; });
   $('fNama').value = SESI ? SESI.nama : '';
   $('fConsent').checked = false;
   imejBukti = []; pdfHalaman = [];
@@ -2545,6 +3139,7 @@ function resetBorang() {
   jenisDipilih = false;
   $('fWarnaKertas').value = CFG.warnaKertas || '#fffbeb';
   $('fSusunGambar').value = CFG.susunGambar || 'AUTO';
+  $('fGayaLaporan').value = CFG.gayaLaporan || 'KOTAK';
   $('tJanaPdf').checked = true;
   pakaiDasarPdf();
   pakaiJenis(jenisLalaiSekolah(), { paksa: true });
@@ -2768,7 +3363,11 @@ async function editLaporan(id) {
     // Rupa dokumen rekod ini dipulihkan supaya PDF yang dijana semula sama.
     $('fWarnaKertas').value = d.warnaKertas || CFG.warnaKertas || '#fffbeb';
     $('fSusunGambar').value = d.susunGambar || CFG.susunGambar || 'AUTO';
-    ['fWarnaKertas', 'fSusunGambar'].forEach(k => medanDisentuh.add(k));
+    $('fGayaLaporan').value = d.gayaLaporan || CFG.gayaLaporan || 'KOTAK';
+    ['fWarnaKertas', 'fSusunGambar', 'fGayaLaporan'].forEach(k => medanDisentuh.add(k));
+    // Logo tambahan (kaki PDF) rekod ini dipulihkan — lihat LOGO_FOOTER_SLOT.
+    const logoRekod = String(d.logoFooter || '').split(',').map(x => x.trim()).filter(Boolean);
+    LOGO_FOOTER_SLOT.forEach(n => { const c = $('tLogo' + n); if (c) c.checked = logoRekod.indexOf(String(n)) !== -1; });
     $('tJanaPdf').checked = true;   // buka semula rekod = biasanya nak jana PDF
 
     $('fConsent').checked = true;
@@ -2973,9 +3572,13 @@ const KUNCI_CONFIG = [
   'NAMA_SEKOLAH', 'ALAMAT_SEKOLAH', 'NAMA_SISTEM', 'SINGKATAN', 'TAJUK_DOKUMEN',
   'TELEFON', 'FAKS', 'MOTO', 'NAMA_PENGETUA', 'JAWATAN_PENYEMAK', 'FOOTER_PDF',
   'PREFIX_FAIL', 'TAHUN_SESI', 'JAWATAN_PENGESAH', 'WARNA_1', 'WARNA_2', 'WARNA_AKSEN',
-  'WARNA_KERTAS', 'SUSUN_GAMBAR', 'WAJIB_PDF', 'WAJIB_PDF_SEMAK',
+  'WARNA_KERTAS', 'SUSUN_GAMBAR', 'GAYA_LAPORAN', 'WAJIB_PDF', 'WAJIB_PDF_SEMAK',
   'CONSENT_TEXT', 'RETENTION_BULAN', 'SESSION_TTL_JAM', 'MAX_UPLOAD_MB',
-  'PDF_AKSES', 'FOLDER_ID'
+  'PDF_AKSES', 'FOLDER_ID',
+  // v2.12 — label boleh edit untuk logo tambahan (kaki PDF, slot 3-6).
+  'LOGO3_LABEL', 'LOGO4_LABEL', 'LOGO5_LABEL', 'LOGO6_LABEL',
+  // v2.12.1 — jajaran jalur logo tambahan (kaki PDF).
+  'LOGO_FOOTER_ALIGN'
 ];
 
 async function muatTetapan() {
@@ -2984,18 +3587,23 @@ async function muatTetapan() {
     if (selSusun && !selSusun.children.length) {
       SUSUN_GAMBAR.forEach(x => { const o = e_('option', '', x.nama); o.value = x.kod; selSusun.appendChild(o); });
     }
+    const selGaya = $('cGAYA_LAPORAN');
+    if (selGaya && !selGaya.children.length) {
+      GAYA_LAPORAN.forEach(x => { const o = e_('option', '', x.nama); o.value = x.kod; selGaya.appendChild(o); });
+    }
     const r = await api('CONFIG_PENUH');
     const c = r.config;
-    const LALAI_CFG = { WARNA_KERTAS: '#fffbeb', SUSUN_GAMBAR: 'AUTO',
-                        WAJIB_PDF: 'TIDAK', WAJIB_PDF_SEMAK: 'YA' };
+    const LALAI_CFG = { WARNA_KERTAS: '#fffbeb', SUSUN_GAMBAR: 'AUTO', GAYA_LAPORAN: 'KOTAK',
+                        WAJIB_PDF: 'TIDAK', WAJIB_PDF_SEMAK: 'YA', LOGO_FOOTER_ALIGN: 'TENGAH' };
     KUNCI_CONFIG.forEach(k => {
       const n = $('c' + k); if (!n) return;
       n.value = c[k] || LALAI_CFG[k] || '';
     });
-    $('pratontonLogo1').src = CFG.logo1 || '';
-    $('pratontonLogo2').src = CFG.logo2 || '';
-    tunjukPautanLogo(1, c.LOGO1_ID, '');
-    tunjukPautanLogo(2, c.LOGO2_ID, '');
+    for (let i = 1; i <= 6; i++) {
+      const pratonton = $('pratontonLogo' + i);
+      if (pratonton) pratonton.src = CFG['logo' + i] || '';
+      tunjukPautanLogo(i, c['LOGO' + i + '_ID'], '');
+    }
   } catch (err) { ralat(err.message); }
 }
 
@@ -3008,7 +3616,7 @@ async function simpanTetapan() {
     await api('SIMPAN_CONFIG', { config: cfg });
     const baru = await api('CONFIG_AWAM');
     CFG = baru;
-    ['fWarnaKertas', 'fSusunGambar'].forEach(k => medanDisentuh.delete(k));
+    ['fWarnaKertas', 'fSusunGambar', 'fGayaLaporan'].forEach(k => medanDisentuh.delete(k));
     pakaiTema(baru); lukisPratonton();
     overlay(false); toast('success', 'Tetapan disimpan.');
   } catch (err) { overlay(false); ralat(err.message); }
@@ -3065,7 +3673,7 @@ async function muatNaikLogo(slot) {
       });
       const baru = await api('CONFIG_AWAM');
       CFG = baru; pakaiTema(baru); lukisPratonton();
-      $('pratontonLogo' + slot).src = slot === 1 ? baru.logo1 : baru.logo2;
+      $('pratontonLogo' + slot).src = baru['logo' + slot] || '';
       tunjukPautanLogo(slot, hasil.fileId, hasil.pautanDrive);
       inp.value = '';
       overlay(false);
@@ -3551,6 +4159,20 @@ async function simpanPengguna() {
           nota.textContent = 'Salin sekarang — ia tidak akan dipaparkan lagi. Pengguna akan diminta tukar selepas log masuk pertama.';
           Swal.getHtmlContainer().appendChild(kod);
           Swal.getHtmlContainer().appendChild(nota);
+          // v2.11.0 — kata laluan kini turut dihantar terus ke emel pengguna
+          // baharu (backend, handleSimpanPengguna_). Papar status di sini
+          // supaya admin tahu jika emel gagal (kuota/alamat) dan kena
+          // kongsi kod di atas secara manual sebagai fallback.
+          const status = document.createElement('p');
+          status.style.cssText = 'margin-top:10px;font-size:12px;font-weight:600';
+          if (r.emelDihantar) {
+            status.style.color = '#059669';
+            status.textContent = '✓ Kata laluan ini turut dihantar terus ke emel ' + email + '.';
+          } else {
+            status.style.color = '#d97706';
+            status.textContent = '⚠ Emel tidak dapat dihantar automatik — sila salin & kongsi kata laluan ini secara manual.';
+          }
+          Swal.getHtmlContainer().appendChild(status);
         }
       });
     } else { toast('success', r.mesej || 'Disimpan.'); }
