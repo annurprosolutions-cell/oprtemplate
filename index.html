@@ -272,9 +272,9 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
    Jajaran (kiri/tengah/kanan) ditetapkan admin (LOGO_FOOTER_ALIGN, lalai
    TENGAH) — lihat lukisLogoFooterPdf(). */
 .pv-logo-footer, .poster-logo-footer{display:flex;align-items:center;justify-content:center;gap:14px;margin:10px 0;flex-wrap:wrap;}
-.pv-logo-footer img, .poster-logo-footer img{height:50px;width:auto;max-width:68px;object-fit:contain;}
+.pv-logo-footer img, .poster-logo-footer img{height:42px;width:auto;max-width:60px;object-fit:contain;}
 .poster-logo-footer{margin:8px 0;}
-.poster-logo-footer img{height:50px;max-width:65px;}
+.poster-logo-footer img{height:36px;max-width:52px;}
 .logo-footer-kiri{justify-content:flex-start;}
 .logo-footer-tengah{justify-content:center;}
 .logo-footer-kanan{justify-content:flex-end;}
@@ -317,6 +317,32 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
 .dd-item{padding:7px 12px;cursor:pointer;font-size:.83rem;color:#334155;}
 .dd-item:hover{background:#eef2ff;color:#3730a3;}
 .pil{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:99px;}
+
+/* --- Pratonton Laporan "melekat" (sticky), v2.13 --------------------------
+   Borang "Maklumat Laporan" (lajur kiri) selalunya jauh lebih panjang drpd
+   pratonton (lajur kanan) — sebelum ni pratonton turut skrol sekali dgn
+   borang, jadi ia hilang dari pandangan (atau tinggal ruang kosong terbiar
+   di bawahnya) sebaik guru skrol jauh ke bawah untuk isi medan seperti
+   Lampiran/Rupa Dokumen. Fix: pratonton "melekat" (position:sticky) di
+   bawah nav (nav tinggi 64px + sedikit ruang), supaya ia sentiasa
+   kelihatan sepanjang guru mengisi borang.
+   - HANYA pada skrin lg: ke atas (>=1024px, sepadan breakpoint dua-lajur
+     Tailwind `lg:col-span-*` — grid jadi satu lajur bertindan di bawah
+     lg, jadi sticky di situ tidak masuk akal/x berguna, malah leceh).
+   - Dibungkus sebagai flex column: tajuk "Pratonton Laporan" (flex:0 0
+     auto, kekal kelihatan) + bekas kandungan (.pratonton-skrol, flex:1 1
+     auto + min-height:0 + overflow-y:auto) — supaya kalau pratonton lebih
+     tinggi drpd ruang skrin yang ada (cth templat 2-muka), ia skrol
+     SENDIRI dalam kotaknya, bukan terpotong senyap di hujung skrin.
+   - TIDAK menjejaskan penjanaan PDF sebenar — janaBlobPdf() sudah pun
+     mengalihkan #pdfContent keluar ke #hosJana (document.body) sebelum
+     merakam dgn html2canvas, jadi ia bebas drpd sebarang sticky/overflow
+     pembungkus di sini sepenuhnya. */
+@media (min-width:1024px){
+  .pratonton-melekat{position:sticky;top:84px;max-height:calc(100vh - 108px);
+    display:flex;flex-direction:column;}
+  .pratonton-skrol{overflow-y:auto;flex:1 1 auto;min-height:0;padding-right:6px;}
+}
 </style>
 </head>
 <body class="text-slate-800">
@@ -742,6 +768,9 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
 
       <!-- PRATONTON A4 -->
       <div class="lg:col-span-8">
+        <!-- v2.13 — pratonton "melekat" (sticky) ikut lajur borang di
+             sebelah kiri; lihat nota .pratonton-melekat dalam <style>. -->
+        <div class="pratonton-melekat">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-base font-bold"><i class="fas fa-file-lines mr-2 teks-w2"></i>Pratonton Laporan</h2>
           <span class="text-xs text-slate-400">Format A4 &middot; inilah yang akan dijana sebagai PDF</span>
@@ -749,6 +778,7 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
         <!-- Bahagian ini SENGAJA tidak guna kelas Tailwind. Semua susun atur
              datang dari <style> dalam fail ini, supaya PDF yang dijana kekal
              betul walaupun CDN Tailwind disekat oleh rangkaian sekolah. -->
+        <div class="pratonton-skrol">
         <div id="pdfContent">
           <!-- HALAMAN 1 -->
           <div class="a4-page" id="pageOne">
@@ -927,6 +957,8 @@ body{font-family:'Poppins',sans-serif;background:#f1f5f9;}
           <!-- HALAMAN 3+: PDF DILAMPIR -->
           <div id="pvLampiranPdf"></div>
         </div>
+        </div><!-- /.pratonton-skrol -->
+        </div><!-- /.pratonton-melekat -->
       </div>
     </section>
 
@@ -4265,3 +4297,4 @@ mula();
 </script>
 </body>
 </html>
+
