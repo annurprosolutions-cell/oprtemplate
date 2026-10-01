@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="ms"><head><meta charset="utf-8">
 <title>Claude Mode Explainer</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="fonts/fonts.css" rel="stylesheet">
 <style>
 :root{--bg:#F6F1E7;--ink:#1E1C19;--mute:#6B655C;--card:#FFFFFF;--line:#E6DFD2;
 --chat:#3D7BE0;--cowork:#E0703F;--artifact:#7B5BD9;--design:#D9467A;--code:#1F9A73;--sched:#E5A422}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-family:'Plus Jakarta Sans',DejaVu Sans,sans-serif;color:var(--ink)}
+html,body{word-spacing:4px;width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-family:'Plus Jakarta Sans',DejaVu Sans,sans-serif;color:var(--ink)}
 .blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.45}
 .b1{width:700px;height:700px;background:#F5C7A9;left:-200px;top:-150px;animation:drift 14s ease-in-out infinite alternate}
 .b2{width:650px;height:650px;background:#CFDDF7;right:-220px;bottom:-120px;animation:drift2 17s ease-in-out infinite alternate}
@@ -14,8 +14,8 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-f
 @keyframes drift2{to{transform:translate(-200px,-300px)}}
 .scene{position:absolute;inset:0;padding:230px 84px 200px;display:flex;flex-direction:column;justify-content:center;opacity:0}
 .kicker{font-size:40px;font-weight:700;letter-spacing:4px;text-transform:uppercase;margin-bottom:22px}
-h1{font-size:96px;line-height:1.05;font-weight:800;letter-spacing:-2px}
-h2{font-size:84px;line-height:1.08;font-weight:800;letter-spacing:-1.5px}
+h1{font-size:96px;line-height:1.05;font-weight:800;letter-spacing:-1px;word-spacing:8px}
+h2{font-size:84px;line-height:1.08;font-weight:800;letter-spacing:-.8px;word-spacing:7px}
 .sub{font-size:44px;line-height:1.38;color:var(--mute);margin-top:28px;font-weight:500}
 .card{background:var(--card);border-radius:36px;box-shadow:0 18px 50px rgba(60,40,10,.10);border:2px solid var(--line)}
 .chips{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:70px}
@@ -35,7 +35,7 @@ h2{font-size:84px;line-height:1.08;font-weight:800;letter-spacing:-1.5px}
 .me{background:var(--chat);color:#fff;margin-left:auto;border-bottom-right-radius:10px}
 .ai{background:#fff;border:2px solid var(--line);margin-top:30px;border-bottom-left-radius:10px;width:760px}
 .ln{height:22px;border-radius:11px;background:#E9E3D8;margin:16px 0;transform-origin:left}
-.mono{font-family:'JetBrains Mono',DejaVu Sans Mono,monospace}
+.mono{word-spacing:0;font-family:'JetBrains Mono',DejaVu Sans Mono,monospace}
 table{border-collapse:collapse;width:100%;font-size:34px}
 td,th{padding:20px 22px;border-bottom:2px solid var(--line);text-align:left}
 th{background:#EAF6EF;color:#1F7A4F}
