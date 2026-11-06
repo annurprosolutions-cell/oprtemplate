@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OPR PoC - Uji drive.file + Picker</title>
+<meta name="robots" content="noindex, nofollow">
 <style>
 :root{--bg:#f8fafc;--fg:#0f172a;--mut:#64748b;--kad:#fff;--bdr:#e2e8f0;--pri:#312e81;--ok:#047857;--bad:#b91c1c;--inf:#475569}
 @media (prefers-color-scheme:dark){:root{--bg:#0f172a;--fg:#e2e8f0;--mut:#94a3b8;--kad:#1e293b;--bdr:#334155;--pri:#818cf8;--ok:#34d399;--bad:#f87171;--inf:#94a3b8}}
@@ -62,7 +63,7 @@ code{background:var(--bg);padding:1px 4px;border-radius:4px}
 <section class="kad" id="secGuru">
   <h2>GURU</h2>
   <p class="m">Buka dalam profil Guru. Tampal pautan dari Admin dahulu.</p>
-  <label>Pautan dari Admin</label><input id="pautanMasuk" placeholder="http://localhost:8080/#s=...&amp;f=...">
+  <label>Pautan dari Admin</label><input id="pautanMasuk" placeholder="https://opr-poc.xxxx.workers.dev/#s=...&amp;f=...">
   <div class="baris">
     <button id="g1">G1. Sambung ke sekolah (Picker)</button>
     <button id="g2">G2. Tambah baris ke Sheet</button>

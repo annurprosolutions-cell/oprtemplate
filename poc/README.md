@@ -1,5 +1,7 @@
 # OPR PoC: drive.file + Picker (tanpa Apps Script)
 
+PoC ini dihos di **Cloudflare Workers (static assets)**, bukan localhost. Hanya folder `poc/public/` yang diterbitkan; README ini dan `wrangler.jsonc` kekal tidak awam.
+
 Tujuan: sahkan tiga andaian sebelum bina OPR v3.
 
 | # | Andaian | Ujian |
@@ -10,30 +12,42 @@ Tujuan: sahkan tiga andaian sebelum bina OPR v3.
 
 Jangkaan untuk #3: admin TIDAK nampak fail guru melalui API tanpa Picker. Itu bukan kegagalan, cuma menentukan sama ada pratonton PDF dalam app admin boleh dibuat, atau admin buka melalui pautan Drive.
 
-## 1. Sediakan Google Cloud (sekali sahaja, guna projek baru khas untuk OPR)
+## 1. Terbitkan ke Cloudflare dahulu (supaya dapat URL tetap)
+
+URL ini diperlukan untuk Google Cloud di langkah 2, jadi buat langkah ini dulu.
+
+1. Buka https://dash.cloudflare.com > **Workers & Pages** > **Create** > **Import a repository** (Connect to Git). Pilih repo `oprtemplate`.
+2. Isi seperti berikut:
+   - **Project name / Worker name**: `opr-poc` (mesti sama dengan `name` dalam `poc/wrangler.jsonc`)
+   - **Production branch**: `claude/modest-cray-tx7gf7`
+   - **Root directory**: `poc`
+   - **Build command**: kosongkan
+   - **Deploy command**: `npx wrangler deploy`
+3. Klik **Save and Deploy**. Selepas siap, Cloudflare tunjuk URL seperti `https://opr-poc.<subdomain-kau>.workers.dev`. **Salin URL ini.**
+
+Kenapa production branch ditukar: URL preview bagi branch bukan production berubah setiap commit, jadi tak sesuai untuk OAuth. Dengan menetapkan branch ini sebagai production, URL `workers.dev` kekal sama dan setiap push ke branch ini auto deploy dalam lebih kurang 30 saat. PoC ini tidak perlu dimerge ke `main`.
+
+Alternatif tanpa Git: pada komputer kau, `cd poc && npx wrangler deploy`.
+
+Domain sendiri tidak perlu untuk PoC. Untuk versi sebenar, tambah Custom Domain pada Worker dan tambah origin baharu di Google Cloud.
+
+## 2. Sediakan Google Cloud (sekali sahaja, guna projek baru khas untuk OPR)
 
 1. Buka https://console.cloud.google.com , klik **Select a project** > **New Project**, nama `OPR PoC`.
 2. Catat **Project Number** (Dashboard > Project info). Ini untuk ruangan App ID.
 3. **APIs & Services > Library**, enable tiga: **Google Drive API**, **Google Sheets API**, **Google Picker API**.
-4. **Google Auth Platform** (atau OAuth consent screen) > **External**. Isi nama app, emel sokongan. Di **Data Access / Scopes** tambah `.../auth/drive.file`, `openid`, `email`.
-5. Di **Audience / Test users** tambah emel admin DAN emel guru yang akan diuji (termasuk satu akaun `@moe-dl.edu.my` jika ada). Mod Testing sudah cukup untuk PoC.
-6. **Credentials > Create credentials > OAuth client ID > Web application**. Di **Authorized JavaScript origins** letak `http://localhost:8080`. Salin **Client ID**.
-7. **Credentials > Create credentials > API key**. Klik **Restrict key**: API restrictions pilih **Google Picker API** sahaja, Application restrictions pilih **Websites** dan letak `http://localhost:8080/*`.
+4. **Google Auth Platform** (atau OAuth consent screen) > **External**. Isi nama app dan emel sokongan. Di **Data Access / Scopes** tambah `.../auth/drive.file`, `openid`, `email`.
+5. Di **Audience / Test users** tambah emel admin DAN emel guru yang akan diuji (termasuk satu akaun `@moe-dl.edu.my` jika ada). Mod Testing cukup untuk PoC.
+6. **Credentials > Create credentials > OAuth client ID > Web application**. Di **Authorized JavaScript origins** letak URL Cloudflare tadi, contoh `https://opr-poc.<subdomain-kau>.workers.dev` (tanpa `/` di hujung dan tanpa path). Salin **Client ID**.
+7. **Credentials > Create credentials > API key**. Klik **Restrict key**: API restrictions pilih **Google Picker API** sahaja, Application restrictions pilih **Websites** dan letak `https://opr-poc.<subdomain-kau>.workers.dev/*`.
 
-Client ID dan API key ini tidak rahsia untuk PoC, tapi jangan tampal dalam chat. Isi terus dalam halaman PoC.
+Perubahan origin di Google kadang ambil beberapa minit hingga sejam untuk berkuat kuasa. Jika log masuk beri ralat `origin_mismatch`, tunggu dahulu sebelum semak semula.
 
-## 2. Jalankan
-
-Pada komputer kau (bukan dalam sesi cloud):
-
-```bash
-git fetch origin claude/modest-cray-tx7gf7 && git checkout claude/modest-cray-tx7gf7
-cd poc && python3 -m http.server 8080
-```
-
-Buka `http://localhost:8080` dalam **dua profil pelayar berbeza** (contoh Chrome Profile Admin dan Chrome Profile Guru, atau Chrome dan Edge).
+Client ID dan API key tidak rahsia untuk PoC, tapi jangan tampal dalam chat. Isi terus dalam halaman PoC.
 
 ## 3. Turutan ujian
+
+Buka URL Cloudflare dalam **dua profil pelayar berbeza** (contoh Chrome Profile Admin dan Chrome Profile Guru, atau Chrome dan Edge). Telefon pun boleh untuk profil Guru.
 
 **Profil Admin**
 1. Isi Client ID, API Key, Project Number, klik **Simpan tetapan**, kemudian **Log masuk Google**.
@@ -59,6 +73,12 @@ Ulang seluruh turutan dengan:
 - Admin Gmail + Guru Gmail
 - Admin `@moe-dl.edu.my` + Guru `@moe-dl.edu.my` (jika "Access blocked" muncul semasa log masuk, rekod mesej penuh itu)
 
+Ujian ini juga mengesahkan hos `workers.dev` tidak disekat oleh rangkaian sekolah. Jika halaman PoC sendiri tak boleh dibuka di rangkaian sekolah, itu juga satu keputusan penting (kita perlu custom domain).
+
 ## 5. Nota pemilikan fail
 
 Fail yang guru cipta dalam folder admin dimiliki oleh **guru**, dan menggunakan kuota Drive guru. Folder berada dalam Drive admin, tapi fail itu sendiri tidak bertukar milik. Jika akaun guru dipadam atau berpindah sekolah, fail boleh hilang. G3 akan menunjukkan pemilik sebenar. Keputusan ini menentukan sama ada kita perlu langkah arkib (admin salin fail ke miliknya) atau Shared Drive.
+
+## 6. Selepas PoC
+
+Padam Worker `opr-poc` dan projek Google Cloud PoC jika tidak diteruskan. Data ujian hanya satu Sheet dan satu folder kecil dalam Drive admin.
